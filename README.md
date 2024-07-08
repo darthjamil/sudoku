@@ -10,12 +10,14 @@ number.
 ![sample Sudoku game board](https://wpc.puzzles.com/sudoku/2009samples/is-6.gif "Sudoku board")
 
 ## Terminology
-The *game board* must be a square, and the *size* of the sides must be a perfect square. The most 
-common board configuration is 9x9. The square root of the size is called the *rank*. Thus, the 
+The **game board** must be a square, and the **size** of the sides must be a perfect square. The most 
+common board configuration is 9x9. The square root of the size is called the **rank**. Thus, the 
 most common configuration has rank 3.
 
-The game board is divided into smaller square grids called *blocks*. The number of blocks on a 
+The game board is divided into smaller square grids called **blocks**. The number of blocks on a 
 board will be the size of the board.
 
 No move by the player is allowed to result in a number appearing twice in a given row, column, or 
-block. This is called the One Rule.
+block. This is called the **One Rule**.
+
+A game board must start with some initial value in some of the cells. These are called **Givens**. 

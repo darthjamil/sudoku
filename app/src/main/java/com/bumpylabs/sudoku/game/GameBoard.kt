@@ -14,23 +14,45 @@ import kotlin.math.sqrt
  */
 class GameBoard private constructor(initialGrid: Array<IntArray>) {
 
-    val rank = sqrt(initialGrid.size.toDouble()).toInt()
-    private val allowedValues = (0..initialGrid.size)
-    private var grid = emptyArray<IntArray>()
+    val rank: Int = sqrt(initialGrid.size.toDouble()).toInt()
+    private val allowedValues: IntRange = (0..initialGrid.size)
+    private val grid: Array<IntArray>
+    private val coordinatesOfGivens: MutableList<Pair<Int, Int>>
 
     init {
         grid = initialGrid
             .map { it.clone() }
             .toTypedArray()
+
+        coordinatesOfGivens = ArrayList()
+
+        for (i in grid.indices) {
+            for (j in grid.indices) {
+                if (!isBlank(grid[i][j])) {
+                    coordinatesOfGivens.add(i to j)
+                }
+            }
+        }
     }
 
+    /**
+     * Returns a 2-d array representing the game grid in its current state.
+     */
     fun getGrid() = grid.map { it.clone() }.toTypedArray()
 
+    /**
+     * Returns whether the current game is in a solved state.
+     */
     fun isSolved(): Boolean {
         return isComplete()
                 && isValid()
     }
 
+    /**
+     * Adds a guess to the specified cell in the grid. An error result is returned if the specified
+     * cell is invalid, the value provided is invalid, the cell is a given, or the guess results
+     * in breaking the One Rule. The grid is never left in an inconsistent state.
+     */
     fun play(i: Int, j: Int, value: Int): PlayResult {
         if (!isIndexInGrid(i, j)) {
             return PlayResult.INDEX_OUT_OF_BOUNDS
@@ -38,6 +60,10 @@ class GameBoard private constructor(initialGrid: Array<IntArray>) {
 
         if (!isValidValue(value)) {
             return PlayResult.INVALID_INPUT
+        }
+
+        if (isIndexGiven(i, j)) {
+            return PlayResult.CANNOT_OVERWRITE_GIVEN
         }
 
         val oldValue = grid[i][j]
@@ -60,6 +86,19 @@ class GameBoard private constructor(initialGrid: Array<IntArray>) {
         }
 
         return PlayResult.VALID
+    }
+
+    /**
+     * Clears the grid, leaving only the givens.
+     */
+    fun clear() {
+        for (i in grid.indices) {
+            for (j in grid.indices) {
+                if (!isIndexGiven(i, j)) {
+                    grid[i][j] = 0
+                }
+            }
+        }
     }
 
     companion object Initializer {
@@ -128,6 +167,8 @@ class GameBoard private constructor(initialGrid: Array<IntArray>) {
     }
 
     private fun isIndexInGrid(i: Int, j: Int) = i >= 0 && i < grid.size && j >= 0 && j < grid.size
+
+    private fun isIndexGiven(i: Int, j: Int) = coordinatesOfGivens.contains(i to j)
 
     private fun containsValidValues(): Boolean {
         return grid

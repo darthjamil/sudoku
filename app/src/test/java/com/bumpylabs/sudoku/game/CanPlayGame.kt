@@ -12,7 +12,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, -1, 0, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
+        assertPlayError(grid, -1, 0, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
     }
 
     @Test
@@ -23,7 +23,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 4, 0, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
+        assertPlayError(grid, 4, 0, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
     }
 
     @Test
@@ -34,7 +34,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 0, -1, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
+        assertPlayError(grid, 0, -1, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
     }
 
     @Test
@@ -45,7 +45,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 0, 4, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
+        assertPlayError(grid, 0, 4, 2, PlayResult.INDEX_OUT_OF_BOUNDS)
     }
 
     @Test
@@ -56,7 +56,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 0, 0, -1, PlayResult.INVALID_INPUT)
+        assertPlayError(grid, 0, 0, -1, PlayResult.INVALID_INPUT)
     }
 
     @Test
@@ -67,7 +67,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 0, 0, 5, PlayResult.INVALID_INPUT)
+        assertPlayError(grid, 0, 0, 5, PlayResult.INVALID_INPUT)
     }
 
     @Test
@@ -78,7 +78,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 2, 3, 3, PlayResult.ROW_BREAKS_ONE_RULE)
+        assertPlayError(grid, 2, 3, 3, PlayResult.ROW_BREAKS_ONE_RULE)
     }
 
     @Test
@@ -89,7 +89,7 @@ internal class CanPlayGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        assertError(grid, 2, 3, 4, PlayResult.COLUMN_BREAKS_ONE_RULE)
+        assertPlayError(grid, 2, 3, 4, PlayResult.COLUMN_BREAKS_ONE_RULE)
     }
 
     @Test
@@ -100,7 +100,18 @@ internal class CanPlayGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        assertError(grid, 1, 1, 1, PlayResult.BLOCK_BREAKS_ONE_RULE)
+        assertPlayError(grid, 1, 1, 1, PlayResult.BLOCK_BREAKS_ONE_RULE)
+    }
+
+    @Test
+    fun can_not_replace_given() {
+        val grid = arrayOf(
+            intArrayOf(1, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        assertPlayError(grid, 0, 0, 1, PlayResult.CANNOT_OVERWRITE_GIVEN)
     }
 
     @Test
@@ -111,19 +122,72 @@ internal class CanPlayGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        val (board, _) = GameBoard.create(grid)
+        val board = createGame(grid)
 
         grid[0][0] = 2
 
-        val refreshedGrid = board!!.getGrid()
+        val refreshedGrid = board.getGrid()
         assertEquals(1, refreshedGrid[0][0])
     }
 
-    private fun assertError(grid: Array<IntArray>, i: Int, j: Int, value: Int, expectedResult: PlayResult) {
-        val (board, _) = GameBoard.create(grid)
-        assertNotNull(board)
+    @Test
+    fun can_play_cell() {
+        val grid = arrayOf(
+            intArrayOf(1, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        val board = createGame(grid)
 
-        val result = board?.play(i, j, value)
+        assertPlaySuccess(board, 1, 0, 2)
+    }
+
+    @Test
+    fun can_reset_cell() {
+        val grid = arrayOf(
+            intArrayOf(1, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        val board = createGame(grid)
+
+        assertPlaySuccess(board, 1, 0, 2)
+        assertPlaySuccess(board, 1, 0, 0)
+    }
+
+    @Test
+    fun can_change_cell() {
+        val grid = arrayOf(
+            intArrayOf(1, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        val board = createGame(grid)
+
+        assertPlaySuccess(board, 1, 0, 2)
+        assertPlaySuccess(board, 1, 0, 3)
+    }
+
+    private fun assertPlayError(grid: Array<IntArray>, i: Int, j: Int, value: Int, expectedResult: PlayResult) {
+        val board = createGame(grid)
+        val result = board.play(i, j, value)
+
         assertEquals(expectedResult, result)
+    }
+
+    private fun assertPlaySuccess(board: GameBoard, i: Int, j: Int, value: Int) {
+        val result = board.play(i, j, value)
+        assertEquals(PlayResult.VALID, result)
+
+        val newBoardGrid = board.getGrid()
+        assertEquals(value, newBoardGrid[i][j])
+    }
+
+    private fun createGame(grid: Array<IntArray>): GameBoard {
+        val (board, _) = GameBoard.create(grid)
+        return board!!
     }
 }
