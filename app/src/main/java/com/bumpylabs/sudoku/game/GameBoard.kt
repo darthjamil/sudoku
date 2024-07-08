@@ -5,26 +5,26 @@ import kotlin.math.sqrt
 /**
  * Represents a sudoku game that can be played by first creating it with
  * an initial board state, then attempting to solve it cell by cell. The
- * game will know when it's been solved.
+ * game will know when it's been solved. The game will never allow itself
+ * to become in an inconsistent state.
  *
  * @param grid: A 2d array that represents the initial state of the game.
  * The constructor is private to prevent creating the game in an invalid
  * state. Use the static builder to create the game, which can return an error.
  */
-class GameBoard private constructor(private val grid: Array<IntArray>) {
+class GameBoard private constructor(initialGrid: Array<IntArray>) {
 
-    val rank: Int = sqrt(grid.size.toDouble()).toInt()
+    val rank = sqrt(initialGrid.size.toDouble()).toInt()
+    private val allowedValues = (0..initialGrid.size)
+    private var grid = emptyArray<IntArray>()
 
-    fun isValid(): Boolean {
-        if (cachedIsValidValue == null) {
-            cachedIsValidValue = containsValidValues()
-                    && rowsSatisfyOneRule()
-                    && columnsSatisfyOneRule()
-                    && blocksSatisfyOneRule()
-        }
-
-        return cachedIsValidValue!!
+    init {
+        grid = initialGrid
+            .map { it.clone() }
+            .toTypedArray()
     }
+
+    fun getGrid() = grid.map { it.clone() }.toTypedArray()
 
     fun isSolved(): Boolean {
         return isComplete()
@@ -40,26 +40,27 @@ class GameBoard private constructor(private val grid: Array<IntArray>) {
             return PlayResult.INVALID_INPUT
         }
 
+        val oldValue = grid[i][j]
+        grid[i][j] = value
+
         if (!rowSatisfiesOneRule(i)) {
+            grid[i][j] = oldValue
             return PlayResult.ROW_BREAKS_ONE_RULE
         }
 
         if (!columnSatisfiesOneRule(j)) {
+            grid[i][j] = oldValue
             return PlayResult.COLUMN_BREAKS_ONE_RULE
         }
 
         val (bi, bj) = blockContaining(i, j)
         if (!blockSatisfiesOneRule(bi, bj)) {
+            grid[i][j] = oldValue
             return PlayResult.BLOCK_BREAKS_ONE_RULE
         }
 
-        grid[i][j] = value
         return PlayResult.VALID
     }
-
-    // Cached value for is-valid check. Reset to null as the game progresses.
-    private var cachedIsValidValue: Boolean? = null
-    private val allowedValues: IntRange = (0..grid.size)
 
     companion object Initializer {
         /**
@@ -119,15 +120,22 @@ class GameBoard private constructor(private val grid: Array<IntArray>) {
         }
     }
 
+    private fun isValid(): Boolean {
+        return containsValidValues()
+            && rowsSatisfyOneRule()
+            && columnsSatisfyOneRule()
+            && blocksSatisfyOneRule()
+    }
+
     private fun isIndexInGrid(i: Int, j: Int) = i >= 0 && i < grid.size && j >= 0 && j < grid.size
 
     private fun containsValidValues(): Boolean {
         return grid
             .flatMap { row -> row.asIterable() }
-            .all { cell -> isValidValue(cell) }
+            .all { value -> isValidValue(value) }
     }
 
-    private fun isValidValue(cell: Int) = allowedValues.contains(cell)
+    private fun isValidValue(value: Int) = allowedValues.contains(value)
 
     private fun rowsSatisfyOneRule() = grid.indices.all { rowSatisfiesOneRule(it) }
 
@@ -166,10 +174,10 @@ class GameBoard private constructor(private val grid: Array<IntArray>) {
     private fun isComplete(): Boolean {
         return grid
             .flatMap { row -> row.asIterable() }
-            .none { cell -> isBlank(cell) }
+            .none { value -> isBlank(value) }
     }
 
-    private fun isBlank(cell: Int) = cell == 0
+    private fun isBlank(value: Int) = value == 0
 
     private fun containsDistincts(array: IntArray): Boolean {
         val nonZeroEntries = array.filterNot { isBlank(it) }
@@ -187,7 +195,7 @@ class GameBoard private constructor(private val grid: Array<IntArray>) {
 
     /**
      * Returns the index of the block containing row i and column j of the grid. i and j can be any
-     * row and column in the game grid. This will return the row and column index of the block
+     * row and column in the game grid. This func will return the row and column index of the block
      * containing i and j.
      */
     private fun blockContaining(i: Int, j: Int): Pair<Int, Int> {
