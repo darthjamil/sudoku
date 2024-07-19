@@ -41,6 +41,16 @@ class GameBoard private constructor(initialGrid: Array<IntArray>) {
     fun getGrid() = grid.map { it.clone() }.toTypedArray()
 
     /**
+     * Returns the value at row i and column j, zero-indexed. A zero represents an empty cell.
+     */
+    fun valueAt(i: Int, j: Int) = grid[i][j]
+
+    /**
+     * Returns whether the cell at row i and column j was a given or not.
+     */
+    fun isGiven(i: Int, j: Int) = isIndexGiven(i, j)
+
+    /**
      * Returns whether the current game is in a solved state.
      */
     fun isSolved(): Boolean {

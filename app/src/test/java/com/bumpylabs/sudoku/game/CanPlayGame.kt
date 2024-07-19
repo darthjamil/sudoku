@@ -171,6 +171,35 @@ internal class CanPlayGame {
         assertPlaySuccess(board, 1, 0, 3)
     }
 
+    @Test
+    fun can_get_value_of_cell() {
+        val value = 4
+        val grid = arrayOf(
+            intArrayOf(value, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        val board = createGame(grid)
+
+        assertEquals(value, board.valueAt(0, 0))
+        assertEquals(0, board.valueAt(1, 0))
+    }
+
+    @Test
+    fun can_determine_if_cell_was_given() {
+        val grid = arrayOf(
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 4, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+            intArrayOf(0, 0, 0, 0),
+        )
+        val board = createGame(grid)
+
+        assertTrue(board.isGiven(1, 1))
+        assertFalse(board.isGiven(2, 2))
+    }
+
     private fun assertPlayError(grid: Array<IntArray>, i: Int, j: Int, value: Int, expectedResult: PlayResult) {
         val board = createGame(grid)
         val result = board.play(i, j, value)
