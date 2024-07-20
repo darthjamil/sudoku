@@ -8,7 +8,7 @@ import kotlin.math.sqrt
  * game will know when it's been solved. The game will never allow itself
  * to become in an inconsistent state.
  *
- * @param grid: A 2d array that represents the initial state of the game.
+ * @param initialGrid: A 2d array that represents the initial state of the game.
  * The constructor is private to prevent creating the game in an invalid
  * state. Use the static builder to create the game, which can return an error.
  */
@@ -151,6 +151,19 @@ class GameBoard private constructor(initialGrid: Array<IntArray>) {
             }
 
             return board to BoardSetupError.NONE
+        }
+
+        fun empty(rank: Int): GameBoard {
+            val size = rank * rank
+            val grid = (0..<size)
+                    .map {
+                        (0..<size)
+                            .map { 0 }
+                            .toIntArray()
+                    }
+                    .toTypedArray()
+
+            return GameBoard(grid)
         }
 
         private fun isTooSmall(grid: Array<IntArray>) = grid.size < 4
