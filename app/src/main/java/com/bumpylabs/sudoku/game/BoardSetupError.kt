@@ -3,7 +3,7 @@ package com.bumpylabs.sudoku.game
 /**
  * The types of errors that can occur when creating a new board
  * with a given initial state. Boards must be square, with side length
- * that is a perfect square (usually 9 or 16), and must provide some
+ * that is a perfect square (usually 9), and must provide some
  * initial state (numbers filled in some of the cells) that is
  * valid and solvable.
  */
