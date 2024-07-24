@@ -207,7 +207,7 @@ internal class CanPlayGame {
         assertEquals(expectedResult, result)
     }
 
-    private fun assertPlaySuccess(board: GameBoard, i: Int, j: Int, value: Int) {
+    private fun assertPlaySuccess(board: Game, i: Int, j: Int, value: Int) {
         val result = board.play(i, j, value)
         assertEquals(PlayResult.VALID, result)
 
@@ -215,8 +215,8 @@ internal class CanPlayGame {
         assertEquals(value, newBoardGrid[i][j])
     }
 
-    private fun createGame(grid: Array<IntArray>): GameBoard {
-        val (board, _) = GameBoard.create(grid)
+    private fun createGame(grid: Array<IntArray>): Game {
+        val (board, _) = Game.create(grid)
         return board!!
     }
 }

@@ -46,6 +46,8 @@ class MainActivity : ComponentActivity() {
             SudokuTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val viewModel: GameViewModel by viewModels()
+                    viewModel.createGame(3)
+
                     Game(viewModel, modifier = Modifier.padding(innerPadding))
                 }
             }

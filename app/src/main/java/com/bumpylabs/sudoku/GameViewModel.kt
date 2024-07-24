@@ -2,14 +2,14 @@ package com.bumpylabs.sudoku
 
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
-import com.bumpylabs.sudoku.game.GameBoard
+import com.bumpylabs.sudoku.game.Game
 import com.bumpylabs.sudoku.game.PlayResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 class GameViewModel : ViewModel() {
-    private lateinit var gameBoard: GameBoard
+    private lateinit var gameBoard: Game
     private val _uiState = MutableStateFlow(GameState())
     val uiState = _uiState.asStateFlow()
 
@@ -61,7 +61,7 @@ class GameViewModel : ViewModel() {
     private fun selectedSameCell(oldRow: Int, oldCol: Int, newRow: Int, newCol: Int) =
         oldRow == newRow && oldCol == newCol
 
-    private fun getGameBoard(rank: Int): GameBoard {
+    private fun getGameBoard(rank: Int): Game {
         val grid = arrayOf(
             intArrayOf(6, 7, 0,   0, 3, 0,   1, 9, 4),
             intArrayOf(0, 0, 9,   0, 0, 0,   7, 0, 8),
@@ -75,7 +75,7 @@ class GameViewModel : ViewModel() {
             intArrayOf(4, 0, 1,   0, 0, 0,   9, 0, 0),
             intArrayOf(9, 5, 7,   0, 6, 0,   0, 8, 1),
         )
-        val (game, _) = GameBoard.create(grid)
+        val (game, _) = Game.create(grid)
         return game!!
     }
 

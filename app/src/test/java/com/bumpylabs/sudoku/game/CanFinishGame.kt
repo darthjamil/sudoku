@@ -142,15 +142,15 @@ internal class CanFinishGame {
         assertGridsAreEqual(grid, updatedGrid)
     }
 
-    private fun createGame(grid: Array<IntArray>): GameBoard {
-        val (board, error) = GameBoard.create(grid)
+    private fun createGame(grid: Array<IntArray>): Game {
+        val (board, error) = Game.create(grid)
         assertEquals(BoardSetupError.NONE, error)
         assertNotNull(board)
 
         return board!!
     }
 
-    private fun assertPlaySuccess(board: GameBoard, i: Int, j: Int, value: Int) {
+    private fun assertPlaySuccess(board: Game, i: Int, j: Int, value: Int) {
         val result = board.play(i, j, value)
         assertEquals(PlayResult.VALID, result)
     }

@@ -3,7 +3,7 @@ package com.bumpylabs.sudoku.game
 import org.junit.Test
 import org.junit.Assert.*
 
-internal class CanCreateGameBoard {
+internal class CanCreateGame {
     @Test
     fun board_cannot_be_empty() {
         assertError(emptyArray(), BoardSetupError.TOO_SMALL)
@@ -157,7 +157,7 @@ internal class CanCreateGameBoard {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        val (board, error) = GameBoard.create(grid)
+        val (board, error) = Game.create(grid)
 
         assertEquals(BoardSetupError.NONE, error)
         assertNotNull(board)
@@ -165,7 +165,7 @@ internal class CanCreateGameBoard {
     }
 
     private fun assertError(grid: Array<IntArray>, expectedError: BoardSetupError) {
-        val (board, error) = GameBoard.create(grid)
+        val (board, error) = Game.create(grid)
 
         assertEquals(expectedError, error)
         assertNull(board)
