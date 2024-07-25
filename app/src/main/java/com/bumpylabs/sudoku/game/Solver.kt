@@ -11,28 +11,37 @@ import java.util.HashMap
 class Solver(array: Array<IntArray>) {
     private val board = SudokuGrid(array)
     private val size = board.size
-    private val rank = board.rank
 
     // Maps values to the number of times a given value has been added to the board
     private val numAllocationsPerValue = HashMap<Int, Int>(size)
+
+    // Maps blocks by their coordinates to whether the block has been filled or not
+    private val isFullByBlock = HashMap<Pair<Int, Int>, Boolean>(size)
 
     /**
      * Solves the game.
      *
      * @return A 2-d array representing the game in a solved and valid state. If there is more
-     * than one solution, the solver aborts and there is no guarantee about the returned grid.
+     * than one solution, or the game could not be solved (e.g. because the starting state was
+     * invalid to begin with), then null is returned.
      */
-    fun solve(): Array<IntArray> {
-        while (solveIteration() > 0) {}
+    fun solve(): Array<IntArray>? {
+        while (solveGrid() > 0) {}
 
-        return board.copyAsArray()
+        return if (board.isSolved()) {
+            board.copyAsArray()
+        } else {
+            null
+        }
     }
 
-    private fun solveIteration(): Int {
+    private fun solveGrid(): Int {
         var numCellsSolved = 0
 
         for (value in 1..size) {
-            numCellsSolved += solveForValue(value)
+            if (!valueIsFullyAllocated(value)) {
+                numCellsSolved += solveForValue(value)
+            }
         }
 
         return numCellsSolved
@@ -41,8 +50,8 @@ class Solver(array: Array<IntArray>) {
     private fun solveForValue(value: Int): Int {
         var numCellsSolved = 0
 
-        for (i in 0..<rank) {
-            for (j in 0..<rank) {
+        for ((i, j) in board.blockCoordinates()) {
+            if (!blockIsFull(i, j)) {
                 numCellsSolved += solveForBlock(value, i, j)
             }
         }
@@ -51,14 +60,6 @@ class Solver(array: Array<IntArray>) {
     }
 
     private fun solveForBlock(value: Int, blockRow: Int, blockCol: Int): Int {
-        if (valueIsFullyAllocated(value)) {
-            return 0
-        }
-
-        if (blockIsFull(blockRow, blockCol)) {
-            return 0
-        }
-
         if (blockContainsValue(value, blockRow, blockCol)) {
             return 0
         }
@@ -66,7 +67,7 @@ class Solver(array: Array<IntArray>) {
         val candidateCellsInBlock = getCandidateCellsInBlock(value, blockRow, blockCol)
 
         if (candidateCellsInBlock.size == 1) {
-            val (i, j) = candidateCellsInBlock.first()
+            val (i, j) = candidateCellsInBlock.single()
             board[i, j] = value
             numAllocationsPerValue[value] = (numAllocationsPerValue[value] ?: 0) + 1
             return 1
@@ -78,7 +79,7 @@ class Solver(array: Array<IntArray>) {
     private fun getCandidateCellsInBlock(value: Int, blockRow: Int, blockCol: Int): List<Pair<Int, Int>> {
         val candidateCells = ArrayList<Pair<Int, Int>>(size)
 
-        for ((i, j) in board.blockCells(blockRow, blockCol)) {
+        for ((i, j) in board.cellsInBlock(blockRow, blockCol)) {
             if (board.isBlank(i, j) && isValidPlacement(i, j, value)) {
                 candidateCells.add(i to j)
             }
@@ -89,11 +90,22 @@ class Solver(array: Array<IntArray>) {
 
     private fun valueIsFullyAllocated(value: Int) = numAllocationsPerValue[value] == size
 
-    private fun blockIsFull(blockRow: Int, blockCol: Int) =
-        !blockContainsValue(0, blockRow, blockCol)
+    private fun blockIsFull(blockRow: Int, blockCol: Int): Boolean {
+        if (isFullByBlock[blockRow to blockCol] == true) {
+            return true
+        }
+
+        val isBlockFull = !blockContainsValue(0, blockRow, blockCol)
+
+        if (isBlockFull) {
+            isFullByBlock[blockRow to blockCol] = true
+        }
+
+        return isBlockFull
+    }
 
     private fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
-        for ((i, j) in board.blockCells(blockRow, blockCol)) {
+        for ((i, j) in board.cellsInBlock(blockRow, blockCol)) {
             if (board[i, j] == value) {
                 return true
             }

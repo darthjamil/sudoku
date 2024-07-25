@@ -36,6 +36,8 @@ internal class CanSolveGame {
             intArrayOf(9, 5, 7,   4, 6, 2,   3, 8, 1),
         )
 
+        assertNotNull(actualSolution)
+        actualSolution!!
         assertEquals(expectedSolution.size, actualSolution.size)
         expectedSolution.indices.forEach {
             assertArrayEquals(
@@ -47,15 +49,25 @@ internal class CanSolveGame {
         }
     }
 
-    private fun Array<IntArray>.pretty(): String {
-        var str = ""
+    @Test
+    fun return_null_on_non_unique_solution() {
+        val grid = arrayOf(
+            intArrayOf(0, 0, 0,   0, 3, 0,   0, 0, 0),
+            intArrayOf(0, 0, 9,   0, 0, 0,   7, 0, 8),
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
 
-        this.forEachIndexed { i, row ->
-            str += "[${row.joinToString(", ")}]"
-            str += "\n"
-            if ((i + 1) % 3 == 0) { str += "\n" }
-        }
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 9),
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 2, 0,   0, 0, 9,   0, 1, 0),
 
-        return str
+            intArrayOf(0, 0, 0,   0, 0, 1,   0, 0, 0),
+            intArrayOf(0, 0, 1,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 1),
+        )
+
+        val solver = Solver(grid)
+        val actualSolution = solver.solve()
+
+        assertNull(actualSolution)
     }
 }

@@ -64,12 +64,13 @@ internal class SudokuGrid {
     }
 
     fun blockSatisfiesOneRule(blockRow: Int, blockCol: Int): Boolean {
-        val block = blockAt(blockRow, blockCol)
-        val flattened = block
-            .flatMap { row -> row.asIterable() }
-            .toIntArray()
+        val blockCellCoordinates = cellsInBlock(blockRow, blockCol).iterator()
+        val blockValues = IntArray(size) {
+            val (i, j) = blockCellCoordinates.next()
+            grid[i][j]
+        }
 
-        return containsDistincts(flattened)
+        return containsDistincts(blockValues)
     }
 
     private fun rowsSatisfyOneRule(): Boolean {
@@ -85,30 +86,13 @@ internal class SudokuGrid {
     }
 
     private fun blocksSatisfyOneRule(): Boolean {
-        for (i in 0..<rank) {
-            for (j in 0..<rank) {
-                if (!blockSatisfiesOneRule(i, j)) {
-                    return false
-                }
+        for ((i, j) in blockCoordinates()) {
+            if (!blockSatisfiesOneRule(i, j)) {
+                return false
             }
         }
 
         return true
-    }
-
-    /**
-     * Returns the block in the given row and column, where the indexes
-     * are indexes of the blocks (from 0 to rank), not of the grid.
-     */
-    fun blockAt(blockRow: Int, blockCol: Int): Array<IntArray> {
-        val blockSize = rank
-        val rowIndexInGrid = blockRow * blockSize
-        val columnIndexInGrid = blockCol * blockSize
-
-        return grid
-            .slice(rowIndexInGrid..< rowIndexInGrid + blockSize)
-            .map { row -> row.slice(columnIndexInGrid..< columnIndexInGrid + blockSize).toIntArray() }
-            .toTypedArray()
     }
 
     /**
@@ -139,7 +123,7 @@ internal class SudokuGrid {
      * Given a set of block coordinates, returns all the coordinates of the grid that fall
      * within that block.
      */
-    fun blockCells(blockRow: Int, blockCol: Int) = sequence {
+    fun cellsInBlock(blockRow: Int, blockCol: Int) = sequence {
         val blockSize = rank
         val blockRowStartIndex = blockRow * blockSize
         val blockRowEndIndex = blockRowStartIndex + blockSize - 1
@@ -148,6 +132,17 @@ internal class SudokuGrid {
 
         for (i in blockRowStartIndex..blockRowEndIndex) {
             for (j in blockColStartIndex..blockColEndIndex) {
+                yield(i to j)
+            }
+        }
+    }
+
+    /**
+     * Returns a set of coordinates for the blocks in the grid.
+     */
+    fun blockCoordinates() = sequence {
+        for (i in 0..<rank) {
+            for (j in 0..<rank) {
                 yield(i to j)
             }
         }
