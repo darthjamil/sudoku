@@ -18,6 +18,17 @@ class Solver(array: Array<IntArray>) {
     // Maps blocks by their coordinates to whether the block has been filled or not
     private val isFullByBlock = HashMap<Pair<Int, Int>, Boolean>(size)
 
+    init {
+        for (i in board.indices) {
+            for (j in board.indices) {
+                if (!board.isBlank(i, j)) {
+                    val value = board[i, j]
+                    numAllocationsPerValue[value] = (numAllocationsPerValue[value] ?: 0) + 1
+                }
+            }
+        }
+    }
+
     /**
      * Solves the game.
      *

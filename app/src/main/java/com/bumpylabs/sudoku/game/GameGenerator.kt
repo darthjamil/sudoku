@@ -6,6 +6,7 @@ package com.bumpylabs.sudoku.game
 class GameGenerator(private val rank: Int) {
     private val size = rank * rank
     private val board = SudokuGrid(rank)
+    private val validValues = (1..size)
 
     /**
      * Generates a random Sudoku puzzle grid.
@@ -14,7 +15,7 @@ class GameGenerator(private val rank: Int) {
      */
     fun generate(k: Int): Array<IntArray> {
         generateFullGrid()
-        redact(k)
+        removeCells(k)
 
         return board.copyAsArray()
     }
@@ -24,8 +25,8 @@ class GameGenerator(private val rank: Int) {
         guessCellsInNonDiagonalBlocks()
     }
 
-    private fun redact(k: Int) {
-        TODO()
+    private fun removeCells(k: Int) {
+        // TODO
     }
 
     private fun guessCellsInDiagonalBlocks() {
@@ -43,21 +44,46 @@ class GameGenerator(private val rank: Int) {
 
     private fun guessCellsInNonDiagonalBlocks() {
         for ((blockRow, blockCol) in nonDiagonalBlocks()) {
-            val valuesToGuessFrom = ArrayDeque((1..size).shuffled())
+            guessCellsInBlock(blockRow, blockCol)
+        }
+    }
 
-            for ((row, col) in board.cellsInBlock(blockRow, blockCol)) {
-                for (guess in valuesToGuessFrom) {
-                    board[row, col] = guess
+    private fun guessCellsInBlock(blockRow: Int, blockCol: Int) {
+        val valueToCandidateCells = buildCandidateCellsMap(blockRow, blockCol)
+        val sortedByLeastCandidates = valueToCandidateCells.entries.sortedBy { it.value.size }
+        val takenCells = mutableSetOf<Pair<Int, Int>>()
 
-                    if (board.rowSatisfiesOneRule(row) && board.columnSatisfiesOneRule(col)) {
-                        valuesToGuessFrom.remove(guess)
-                        break
-                    } else {
-                        board[row, col] = 0
-                    }
+        for ((value, candidateCells) in sortedByLeastCandidates) {
+            val (i, j) = candidateCells.subtract(takenCells).random()
+            board[i, j] = value
+            takenCells.add(i to j)
+        }
+    }
+
+    /*
+     * For a given block, builds a map that maps cell-values to all the candidate cells
+     * in which that value can be placed
+     */
+    private fun buildCandidateCellsMap(blockRow: Int, blockCol: Int):
+            HashMap<Int, ArrayList<Pair<Int, Int>>> {
+        val map = HashMap<Int, ArrayList<Pair<Int, Int>>>(size)
+
+        for ((row, col) in board.cellsInBlock(blockRow, blockCol)) {
+            val valuesInRow = board.indices.map { board[row, it] }.filterNot { it == 0 }
+            val valuesInCol = board.indices.map { board[it, col] }.filterNot { it == 0 }
+            val takenValues = valuesInRow.union(valuesInCol)
+            val allowedValues = validValues.subtract(takenValues)
+
+            for (allowedValue in allowedValues) {
+                if (map.containsKey(allowedValue)) {
+                    map[allowedValue]?.add(row to col)
+                } else {
+                    map[allowedValue] = arrayListOf(row to col)
                 }
             }
         }
+
+        return map
     }
 
     private fun diagonalBlocks() = sequence {
