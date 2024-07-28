@@ -39,7 +39,7 @@ internal class CanSolveGame {
 
         assertNotNull(actualSolution)
 
-        val actualGrid = actualSolution!!.copyAsArray()
+        val actualGrid = actualSolution!!.grid.copyAsArray()
         assertEquals(expectedSolution.size, actualGrid.size)
         expectedSolution.indices.forEach {
             assertArrayEquals(
@@ -98,7 +98,7 @@ internal class CanSolveGame {
 
         assertNotNull(actualSolution)
 
-        val actualGrid = actualSolution!!.copyAsArray()
+        val actualGrid = actualSolution!!.grid.copyAsArray()
         print(actualGrid.pretty())
     }
 }

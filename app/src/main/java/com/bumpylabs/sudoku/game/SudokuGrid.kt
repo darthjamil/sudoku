@@ -26,6 +26,7 @@ class SudokuGrid {
         grid[i][j] = value
     }
 
+    fun copy() = SudokuGrid(copyAsArray())
     fun copyAsArray() = grid.map { it.clone() }.toTypedArray()
 
     fun clearCell(row: Int, col: Int) {

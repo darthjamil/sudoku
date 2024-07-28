@@ -30,14 +30,14 @@ class Solver(private val board: SudokuGrid) {
     /**
      * Solves the game.
      *
-     * @return A grid representing the game in a solved and valid state. If there is more
-     * than one solution, one of the multiple possible solutions is returned at random. Thus, this
-     * can be used for generating a new game grid. Null is returned if the game could not
-     * be solved (ex. if the original grid was in an invalid state). The game is solved in
-     * place; therefore, the grid that is returned from [solve] is the same reference as the
-     * input to the constructor.
+     * @return A solution record containing the grid representing the game in a solved and valid
+     * state. If there is more than one solution, one of the multiple possible solutions is returned
+     * at random. Thus, this can be used for generating a new game grid. Null is returned if the
+     * game could not be solved (ex. if the original grid was in an invalid state). The game is
+     * solved in place; therefore, the grid that is returned from [solve] is the same reference as
+     * the input to the constructor.
      */
-    fun solve(): SudokuGrid? {
+    fun solve(): Solution? {
         do {
             val previousNumCellsSolvedByGuessing = numCellsSolvedByGuessing
 
@@ -50,7 +50,7 @@ class Solver(private val board: SudokuGrid) {
             solveGrid()
         } while (numCellsSolvedByGuessing > previousNumCellsSolvedByGuessing)
 
-        return if (board.isSolved()) board else null
+        return if (board.isSolved()) Solution(board, numCellsSolvedByGuessing == 0) else null
     }
 
     private fun primeNumValueAllocationsMap() {
