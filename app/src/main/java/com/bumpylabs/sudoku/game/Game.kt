@@ -11,17 +11,16 @@ import kotlin.math.sqrt
  * @param initialGrid: A 2d array that represents the initial state of the game.
  * The constructor is private to prevent creating the game in an invalid
  * state. Use the static builder to create the game, which can return an error.
+ * The game does not change the underlying values of its input parameters.
  */
 class Game private constructor(initialGrid: Array<IntArray>) {
 
     val rank = sqrt(initialGrid.size.toDouble()).toInt()
     private val board = SudokuGrid(initialGrid)
     private val allowedValues = (0..initialGrid.size)
-    private val coordinatesOfGivens: MutableList<Pair<Int, Int>>
+    private val coordinatesOfGivens: MutableList<Pair<Int, Int>> = ArrayList()
 
     init {
-        coordinatesOfGivens = ArrayList()
-
         for (i in board.indices) {
             for (j in board.indices) {
                 if (!board.isBlank(i, j)) {

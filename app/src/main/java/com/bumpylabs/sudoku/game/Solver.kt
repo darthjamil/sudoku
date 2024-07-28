@@ -6,11 +6,16 @@ import java.util.HashMap
 /**
  * Solves a game of Sudoku.
  *
- * @param array: A 2-d array representing the Sudoku game to solve.
+ * @param board: Represents the Sudoku game to solve. The game can be in any state
+ * of completion, including having multiple possible solutions. The input board will
+ * be changed in place to solve the grid.
  */
-class Solver(array: Array<IntArray>) {
-    private val board = SudokuGrid(array)
+class Solver(private val board: SudokuGrid) {
     private val size = board.size
+    private val allowedValues = 1..size
+    private var numCellsSolved = 0
+    private var numCellsSolvedByGuessing = 0
+    private var allowGuessing = false
 
     // Maps values to the number of times a given value has been added to the board
     private val numAllocationsPerValue = HashMap<Int, Int>(size)
@@ -19,6 +24,36 @@ class Solver(array: Array<IntArray>) {
     private val isFullByBlock = HashMap<Pair<Int, Int>, Boolean>(size)
 
     init {
+        primeNumValueAllocationsMap()
+    }
+
+    /**
+     * Solves the game.
+     *
+     * @return A grid representing the game in a solved and valid state. If there is more
+     * than one solution, one of the multiple possible solutions is returned at random. Thus, this
+     * can be used for generating a new game grid. Null is returned if the game could not
+     * be solved (ex. if the original grid was in an invalid state). The game is solved in
+     * place; therefore, the grid that is returned from [solve] is the same reference as the
+     * input to the constructor.
+     */
+    fun solve(): SudokuGrid? {
+        do {
+            val previousNumCellsSolvedByGuessing = numCellsSolvedByGuessing
+
+            do {
+                val previousNumCellsSolved = numCellsSolved
+                solveGrid()
+            } while (numCellsSolved > previousNumCellsSolved)
+
+            allowGuessing = true
+            solveGrid()
+        } while (numCellsSolvedByGuessing > previousNumCellsSolvedByGuessing)
+
+        return if (board.isSolved()) board else null
+    }
+
+    private fun primeNumValueAllocationsMap() {
         for (i in board.indices) {
             for (j in board.indices) {
                 if (!board.isBlank(i, j)) {
@@ -29,69 +64,55 @@ class Solver(array: Array<IntArray>) {
         }
     }
 
-    /**
-     * Solves the game.
-     *
-     * @return A 2-d array representing the game in a solved and valid state. If there is more
-     * than one solution, or the game could not be solved (e.g. because the starting state was
-     * invalid to begin with), then null is returned.
-     */
-    fun solve(): Array<IntArray>? {
-        while (solveGrid() > 0) {}
-
-        return if (board.isSolved()) {
-            board.copyAsArray()
-        } else {
-            null
-        }
-    }
-
-    private fun solveGrid(): Int {
-        var numCellsSolved = 0
-
-        for (value in 1..size) {
+    private fun solveGrid() {
+        for (value in allowedValues) {
             if (!valueIsFullyAllocated(value)) {
-                numCellsSolved += solveForValue(value)
+                solveForValue(value)
             }
         }
-
-        return numCellsSolved
     }
 
-    private fun solveForValue(value: Int): Int {
-        var numCellsSolved = 0
-
+    private fun solveForValue(value: Int) {
         for ((i, j) in board.blockCoordinates()) {
-            if (!blockIsFull(i, j)) {
-                numCellsSolved += solveForBlock(value, i, j)
+            if (!blockIsFull(i, j) && !board.blockContainsValue(value, i, j)) {
+                solveForBlock(value, i, j)
             }
         }
-
-        return numCellsSolved
     }
 
-    private fun solveForBlock(value: Int, blockRow: Int, blockCol: Int): Int {
-        if (blockContainsValue(value, blockRow, blockCol)) {
-            return 0
-        }
-
+    private fun solveForBlock(value: Int, blockRow: Int, blockCol: Int) {
         val candidateCellsInBlock = getCandidateCellsInBlock(value, blockRow, blockCol)
+
+        if (candidateCellsInBlock.isEmpty()) {
+            return
+        }
 
         if (candidateCellsInBlock.size == 1) {
             val (i, j) = candidateCellsInBlock.single()
             board[i, j] = value
+
+            numCellsSolved++
+
             numAllocationsPerValue[value] = (numAllocationsPerValue[value] ?: 0) + 1
-            return 1
         }
 
-        return 0
+        if (candidateCellsInBlock.size > 1 && allowGuessing) {
+            val (i, j) = candidateCellsInBlock.random()
+            board[i, j] = value
+
+            numCellsSolved++
+            numCellsSolvedByGuessing++
+            allowGuessing = false
+
+            numAllocationsPerValue[value] = (numAllocationsPerValue[value] ?: 0) + 1
+        }
     }
 
     private fun getCandidateCellsInBlock(value: Int, blockRow: Int, blockCol: Int): List<Pair<Int, Int>> {
         val candidateCells = ArrayList<Pair<Int, Int>>(size)
 
         for ((i, j) in board.cellsInBlock(blockRow, blockCol)) {
-            if (board.isBlank(i, j) && isValidPlacement(i, j, value)) {
+            if (board.isBlank(i, j) && isValidPlay(i, j, value)) {
                 candidateCells.add(i to j)
             }
         }
@@ -106,7 +127,7 @@ class Solver(array: Array<IntArray>) {
             return true
         }
 
-        val isBlockFull = !blockContainsValue(0, blockRow, blockCol)
+        val isBlockFull = !board.blockContainsValue(0, blockRow, blockCol)
 
         if (isBlockFull) {
             isFullByBlock[blockRow to blockCol] = true
@@ -115,17 +136,7 @@ class Solver(array: Array<IntArray>) {
         return isBlockFull
     }
 
-    private fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
-        for ((i, j) in board.cellsInBlock(blockRow, blockCol)) {
-            if (board[i, j] == value) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    private fun isValidPlacement(i: Int, j: Int, value: Int): Boolean {
+    private fun isValidPlay(i: Int, j: Int, value: Int): Boolean {
         val oldValue = board[i, j]
 
         board[i, j] = value

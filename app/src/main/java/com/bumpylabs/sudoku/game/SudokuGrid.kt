@@ -5,7 +5,7 @@ import kotlin.math.sqrt
 /**
  * A data structure representing a Sudoku board.
  */
-internal class SudokuGrid {
+class SudokuGrid {
     val rank: Int
     val size: Int
     val indices: IntRange
@@ -28,6 +28,10 @@ internal class SudokuGrid {
 
     fun copyAsArray() = grid.map { it.clone() }.toTypedArray()
 
+    fun clearCell(row: Int, col: Int) {
+        grid[row][col] = 0
+    }
+
     fun isSolved() = isComplete() && gridSatisfiesOneRule()
 
     fun isComplete(): Boolean {
@@ -38,10 +42,6 @@ internal class SudokuGrid {
     }
 
     fun isBlank(row: Int, col: Int) = Companion.isBlank(grid[row][col])
-
-    fun clearCell(row: Int, col: Int) {
-        grid[row][col] = 0
-    }
 
     fun gridSatisfiesOneRule(): Boolean {
         return rowsSatisfyOneRule()
@@ -93,6 +93,16 @@ internal class SudokuGrid {
         }
 
         return true
+    }
+
+    fun rowContainsValue(value: Int, row: Int) = grid[row].any { value == it }
+
+    fun columnContainsValue(value: Int, col: Int) = grid.indices.any { i -> grid[i][col] == value }
+
+    fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
+        return cellsInBlock(blockRow, blockCol).any { (i, j) ->
+            grid[i][j] == value
+        }
     }
 
     /**

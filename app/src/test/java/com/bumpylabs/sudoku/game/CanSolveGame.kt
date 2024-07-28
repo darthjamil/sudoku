@@ -20,7 +20,8 @@ internal class CanSolveGame {
             intArrayOf(9, 5, 7,   0, 6, 0,   0, 8, 1),
         )
 
-        val solver = Solver(grid)
+        val board = SudokuGrid(grid)
+        val solver = Solver(board)
         val actualSolution = solver.solve()
         val expectedSolution = arrayOf(
             intArrayOf(6, 7, 5,   2, 3, 8,   1, 9, 4),
@@ -37,37 +38,67 @@ internal class CanSolveGame {
         )
 
         assertNotNull(actualSolution)
-        actualSolution!!
-        assertEquals(expectedSolution.size, actualSolution.size)
+
+        val actualGrid = actualSolution!!.copyAsArray()
+        assertEquals(expectedSolution.size, actualGrid.size)
         expectedSolution.indices.forEach {
             assertArrayEquals(
                 "Started with:\n${grid.pretty()}" +
                         "Expected:\n${expectedSolution.pretty()} " +
-                        "Got:\n${actualSolution.pretty()}\n",
+                        "Got:\n${actualGrid.pretty()}\n",
                 expectedSolution[it],
-                actualSolution[it])
+                actualGrid[it])
         }
+
+        print(actualGrid.pretty())
     }
 
     @Test
-    fun return_null_on_non_unique_solution() {
+    fun return_null_on_invalid_starting_grid() {
         val grid = arrayOf(
-            intArrayOf(0, 0, 0,   0, 3, 0,   0, 0, 0),
+            intArrayOf(6, 6, 0,   0, 3, 0,   1, 9, 4),
             intArrayOf(0, 0, 9,   0, 0, 0,   7, 0, 8),
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 9,   9, 0, 4,   0, 3, 0),
 
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 9),
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
-            intArrayOf(0, 2, 0,   0, 0, 9,   0, 1, 0),
+            intArrayOf(0, 1, 0,   5, 0, 0,   0, 4, 9),
+            intArrayOf(0, 0, 3,   0, 0, 0,   2, 0, 0),
+            intArrayOf(5, 2, 0,   0, 0, 9,   0, 1, 0),
 
-            intArrayOf(0, 0, 0,   0, 0, 1,   0, 0, 0),
-            intArrayOf(0, 0, 1,   0, 0, 0,   0, 0, 0),
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 1),
+            intArrayOf(0, 6, 0,   3, 0, 1,   0, 7, 0),
+            intArrayOf(4, 0, 1,   0, 0, 0,   9, 0, 0),
+            intArrayOf(9, 5, 7,   0, 6, 0,   0, 8, 1),
         )
 
-        val solver = Solver(grid)
+        val board = SudokuGrid(grid)
+        val solver = Solver(board)
         val actualSolution = solver.solve()
 
         assertNull(actualSolution)
+    }
+
+    @Test
+    fun return_random_solution_on_multiple_solutions_input() {
+        val grid = arrayOf(
+            intArrayOf(6, 7, 0,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 8, 0,   0, 0, 0,   0, 0, 0),
+
+            intArrayOf(0, 0, 0,   5, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 3,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 0,   0, 0, 9,   0, 1, 0),
+
+            intArrayOf(0, 6, 0,   3, 0, 1,   0, 7, 0),
+            intArrayOf(4, 0, 1,   0, 0, 0,   9, 0, 0),
+            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 1),
+        )
+
+        val board = SudokuGrid(grid)
+        val solver = Solver(board)
+        val actualSolution = solver.solve()
+
+        assertNotNull(actualSolution)
+
+        val actualGrid = actualSolution!!.copyAsArray()
+        print(actualGrid.pretty())
     }
 }
