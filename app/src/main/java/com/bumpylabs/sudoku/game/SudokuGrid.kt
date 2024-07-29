@@ -70,8 +70,8 @@ class SudokuGrid {
     }
 
     fun blockSatisfiesOneRule(blockRow: Int, blockCol: Int): Boolean {
-        val valuesInbLock = valuesInBlock(blockRow, blockCol).toIntArray()
-        return valuesInbLock.size == size && containsDistincts(valuesInbLock)
+        val valuesInBlock = valuesInBlock(blockRow, blockCol).toIntArray()
+        return containsDistincts(valuesInBlock)
     }
 
     private fun blocksSatisfyOneRule() = blockCoordinates().all { (i, j) -> blockSatisfiesOneRule(i, j) }
@@ -97,6 +97,16 @@ class SudokuGrid {
 
         val takenValues = rowValues.union(columnValues).union(blockValues)
         return (1..size).subtract(takenValues).toList()
+    }
+
+    fun blankCells() = sequence {
+        for (i in grid.indices) {
+            for (j in grid.indices) {
+                if (isBlank(i, j)) {
+                    yield(i to j)
+                }
+            }
+        }
     }
 
     /**

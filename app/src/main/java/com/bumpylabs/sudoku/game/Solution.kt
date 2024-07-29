@@ -12,5 +12,4 @@ enum class SolutionType {
     NO_SOLUTION,
     SINGLE_SOLUTION,
     MULTIPLE_SOLUTIONS,
-    MULTIPLE_OR_NO_SOLUTIONS,
 }
