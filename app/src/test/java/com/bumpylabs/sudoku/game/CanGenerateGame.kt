@@ -7,11 +7,13 @@ internal class CanGenerateGame {
     @Test
     fun can_generate_solved_game() {
         val generator = GameGenerator(3)
-        val grid = generator.generate(0)
+        val board = generator.generate()
+        val grid = board.copyAsArray()
 
         print(grid.pretty())
-        assertEquals(9, grid.size)
+
+        assertTrue(board.isSolved())
+        assertEquals(9, board.size)
         grid.forEach { assertEquals(9, it.size) }
-        assertTrue(grid.all { row -> row.all { cell -> cell != 0 } })
     }
 }

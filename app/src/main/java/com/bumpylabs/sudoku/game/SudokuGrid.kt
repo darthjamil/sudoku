@@ -44,6 +44,38 @@ class SudokuGrid {
 
     fun isBlank(row: Int, col: Int) = Companion.isBlank(grid[row][col])
 
+    fun valuesInRow(row: Int) = grid[row].map { it }.filterNot { isBlank(it) }
+    fun rowContainsValue(value: Int, row: Int) = grid[row].any { value == it }
+    fun rowSatisfiesOneRule(row: Int) = containsDistincts(grid[row])
+    private fun rowsSatisfyOneRule() = grid.indices.all { rowSatisfiesOneRule(it) }
+
+    fun valuesInColumn(col: Int) = grid.indices.map { i -> grid[i][col] }.filterNot { isBlank(it) }
+    fun columnContainsValue(value: Int, col: Int) = grid.indices.any { i -> grid[i][col] == value }
+    fun columnSatisfiesOneRule(col: Int): Boolean {
+        val column = grid.map { row -> row[col] }
+        return containsDistincts(column.toIntArray())
+    }
+    private fun columnsSatisfyOneRule() = grid.indices.all { j -> columnSatisfiesOneRule(j) }
+
+    fun valuesInBlock(blockRow: Int, blockCol: Int): List<Int> {
+        val cells = cellsInBlock(blockRow, blockCol)
+        val values = cells.map { (i, j) -> grid[i][j] }.filterNot { isBlank(it) }
+        return values.toList()
+    }
+
+    fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
+        return cellsInBlock(blockRow, blockCol).any { (i, j) ->
+            grid[i][j] == value
+        }
+    }
+
+    fun blockSatisfiesOneRule(blockRow: Int, blockCol: Int): Boolean {
+        val valuesInbLock = valuesInBlock(blockRow, blockCol).toIntArray()
+        return valuesInbLock.size == size && containsDistincts(valuesInbLock)
+    }
+
+    private fun blocksSatisfyOneRule() = blockCoordinates().all { (i, j) -> blockSatisfiesOneRule(i, j) }
+
     fun gridSatisfiesOneRule(): Boolean {
         return rowsSatisfyOneRule()
                 && columnsSatisfyOneRule()
@@ -57,53 +89,14 @@ class SudokuGrid {
                 && blockSatisfiesOneRule(blockRow, blockCol)
     }
 
-    fun rowSatisfiesOneRule(row: Int) = containsDistincts(grid[row])
+    fun allowedValuesForCell(row: Int, col: Int): List<Int> {
+        val rowValues = valuesInRow(row)
+        val columnValues = valuesInColumn(col)
+        val (blockRow, blockCol) = blockContaining(row, col)
+        val blockValues = valuesInBlock(blockRow, blockCol)
 
-    fun columnSatisfiesOneRule(col: Int): Boolean {
-        val column = grid.map { row -> row[col] }
-        return containsDistincts(column.toIntArray())
-    }
-
-    fun blockSatisfiesOneRule(blockRow: Int, blockCol: Int): Boolean {
-        val blockCellCoordinates = cellsInBlock(blockRow, blockCol).iterator()
-        val blockValues = IntArray(size) {
-            val (i, j) = blockCellCoordinates.next()
-            grid[i][j]
-        }
-
-        return containsDistincts(blockValues)
-    }
-
-    private fun rowsSatisfyOneRule(): Boolean {
-        return grid.indices.all {
-            rowSatisfiesOneRule(it)
-        }
-    }
-
-    private fun columnsSatisfyOneRule(): Boolean {
-        return grid.indices.all { j ->
-            columnSatisfiesOneRule(j)
-        }
-    }
-
-    private fun blocksSatisfyOneRule(): Boolean {
-        for ((i, j) in blockCoordinates()) {
-            if (!blockSatisfiesOneRule(i, j)) {
-                return false
-            }
-        }
-
-        return true
-    }
-
-    fun rowContainsValue(value: Int, row: Int) = grid[row].any { value == it }
-
-    fun columnContainsValue(value: Int, col: Int) = grid.indices.any { i -> grid[i][col] == value }
-
-    fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
-        return cellsInBlock(blockRow, blockCol).any { (i, j) ->
-            grid[i][j] == value
-        }
+        val takenValues = rowValues.union(columnValues).union(blockValues)
+        return (1..size).subtract(takenValues).toList()
     }
 
     /**

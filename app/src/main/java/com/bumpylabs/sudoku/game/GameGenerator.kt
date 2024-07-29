@@ -5,25 +5,22 @@ package com.bumpylabs.sudoku.game
  */
 class GameGenerator(private val rank: Int) {
     private val size = rank * rank
-    private val board = SudokuGrid(rank)
+    private var board = SudokuGrid(rank)
 
     /**
      * Generates a random Sudoku puzzle grid.
-     * @param k: The number of cells to obfuscate
      * @return A 2-d array representing the game
      */
-    fun generate(k: Int): SudokuGrid {
+    fun generate(): SudokuGrid {
         generateFullGrid()
-        removeCells(k)
+        removeCells()
 
         return board
     }
 
     private fun generateFullGrid() {
         guessCellsInDiagonalBlocks()
-
-        val solver = Solver(board)
-        solver.solve() ?: throw NullPointerException("Could not generate solved board.")
+        solveRestOfGrid()
     }
 
     private fun guessCellsInDiagonalBlocks() {
@@ -45,7 +42,13 @@ class GameGenerator(private val rank: Int) {
         }
     }
 
-    private fun removeCells(k: Int) {
+    private fun solveRestOfGrid() {
+        val solver = Solver()
+        val solution = solver.solve(board)
+        board = solution.solution
+    }
+
+    private fun removeCells() {
         // TODO
     }
 }

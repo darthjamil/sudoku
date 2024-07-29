@@ -21,8 +21,8 @@ internal class CanSolveGame {
         )
 
         val board = SudokuGrid(grid)
-        val solver = Solver(board)
-        val actualSolution = solver.solve()
+        val solver = Solver()
+        val solution = solver.solve(board)
         val expectedSolution = arrayOf(
             intArrayOf(6, 7, 5,   2, 3, 8,   1, 9, 4),
             intArrayOf(3, 4, 9,   6, 1, 5,   7, 2, 8),
@@ -37,9 +37,11 @@ internal class CanSolveGame {
             intArrayOf(9, 5, 7,   4, 6, 2,   3, 8, 1),
         )
 
-        assertNotNull(actualSolution)
+        assertEquals(SolutionType.SINGLE_SOLUTION, solution.solutionType)
 
-        val actualGrid = actualSolution!!.grid.copyAsArray()
+        val actualGrid = solution.solution.copyAsArray()
+        print(actualGrid.pretty())
+
         assertEquals(expectedSolution.size, actualGrid.size)
         expectedSolution.indices.forEach {
             assertArrayEquals(
@@ -49,12 +51,10 @@ internal class CanSolveGame {
                 expectedSolution[it],
                 actualGrid[it])
         }
-
-        print(actualGrid.pretty())
     }
 
     @Test
-    fun return_null_on_invalid_starting_grid() {
+    fun return_no_solution_on_invalid_starting_grid() {
         val grid = arrayOf(
             intArrayOf(6, 6, 0,   0, 3, 0,   1, 9, 4),
             intArrayOf(0, 0, 9,   0, 0, 0,   7, 0, 8),
@@ -70,35 +70,40 @@ internal class CanSolveGame {
         )
 
         val board = SudokuGrid(grid)
-        val solver = Solver(board)
-        val actualSolution = solver.solve()
+        val solver = Solver()
+        val solution = solver.solve(board)
 
-        assertNull(actualSolution)
+        assertEquals(SolutionType.NO_SOLUTION, solution.solutionType)
     }
 
     @Test
     fun return_random_solution_on_multiple_solutions_input() {
         val grid = arrayOf(
-            intArrayOf(6, 7, 0,   0, 0, 0,   0, 0, 0),
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 0),
-            intArrayOf(0, 8, 0,   0, 0, 0,   0, 0, 0),
+            intArrayOf(0, 0, 0,   0, 3, 0,   1, 9, 4),
+            intArrayOf(0, 0, 0,   0, 0, 0,   7, 0, 8),
+            intArrayOf(0, 0, 0,   9, 0, 4,   0, 3, 0),
 
-            intArrayOf(0, 0, 0,   5, 0, 0,   0, 0, 0),
-            intArrayOf(0, 0, 3,   0, 0, 0,   0, 0, 0),
-            intArrayOf(0, 0, 0,   0, 0, 9,   0, 1, 0),
+            intArrayOf(0, 1, 0,   5, 0, 0,   0, 4, 9),
+            intArrayOf(0, 0, 3,   0, 0, 0,   2, 0, 0),
+            intArrayOf(5, 2, 0,   0, 0, 9,   0, 1, 0),
 
             intArrayOf(0, 6, 0,   3, 0, 1,   0, 7, 0),
             intArrayOf(4, 0, 1,   0, 0, 0,   9, 0, 0),
-            intArrayOf(0, 0, 0,   0, 0, 0,   0, 0, 1),
+            intArrayOf(9, 5, 7,   0, 6, 0,   0, 8, 1),
         )
 
         val board = SudokuGrid(grid)
-        val solver = Solver(board)
-        val actualSolution = solver.solve()
 
-        assertNotNull(actualSolution)
+        repeat(20) { i ->
+            val solver = Solver()
+            val solution = solver.solve(board)
 
-        val actualGrid = actualSolution!!.grid.copyAsArray()
-        print(actualGrid.pretty())
+            println("Solution for iteration $i:")
+            print(solution.solution.copyAsArray().pretty())
+
+            assertEquals("Failed on iteration $i",
+                SolutionType.MULTIPLE_SOLUTIONS, solution.solutionType)
+            assertTrue("Failed on iteration $i", solution.solution.isSolved())
+        }
     }
 }
