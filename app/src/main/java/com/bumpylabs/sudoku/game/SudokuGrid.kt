@@ -5,21 +5,13 @@ import kotlin.math.sqrt
 /**
  * A data structure representing a Sudoku board.
  */
-class SudokuGrid {
-    val rank: Int
-    val size: Int
+class SudokuGrid(array: Array<IntArray>) {
+    val size: Int = array.size
+    val rank: Int = sqrt(size.toDouble()).toInt()
     val indices: IntRange
         get() = grid.indices
 
-    private val grid: Array<IntArray>
-
-    constructor(array: Array<IntArray>) {
-        grid = array.map { it.clone() }.toTypedArray()
-        size = array.size
-        rank = sqrt(size.toDouble()).toInt()
-    }
-
-    constructor(rank: Int): this(Array(rank * rank) { IntArray(rank * rank) })
+    private val grid: Array<IntArray> = array.map { it.clone() }.toTypedArray()
 
     operator fun get(i: Int, j: Int) = grid[i][j]
     operator fun set(i: Int, j: Int, value: Int) {

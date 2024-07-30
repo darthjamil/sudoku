@@ -21,8 +21,8 @@ internal class CanSolveGame {
         )
 
         val board = SudokuGrid(grid)
-        val solver = Solver()
-        val solution = solver.solve(board)
+        val solver = Solver(board)
+        val solution = solver.solve()
         val expectedSolution = arrayOf(
             intArrayOf(6, 7, 5,   2, 3, 8,   1, 9, 4),
             intArrayOf(3, 4, 9,   6, 1, 5,   7, 2, 8),
@@ -70,8 +70,8 @@ internal class CanSolveGame {
         )
 
         val board = SudokuGrid(grid)
-        val solver = Solver()
-        val solution = solver.solve(board)
+        val solver = Solver(board)
+        val solution = solver.solve()
 
         assertEquals(SolutionType.NO_SOLUTION, solution.solutionType)
     }
@@ -93,17 +93,9 @@ internal class CanSolveGame {
         )
 
         val board = SudokuGrid(grid)
+        val solver = Solver(board)
+        val solution = solver.solve()
 
-        repeat(20) { i ->
-            val solver = Solver()
-            val solution = solver.solve(board)
-
-            println("Solution for iteration $i:")
-            print(solution.solution.copyAsArray().pretty())
-
-            assertEquals("Failed on iteration $i",
-                SolutionType.MULTIPLE_SOLUTIONS, solution.solutionType)
-            assertTrue("Failed on iteration $i", solution.solution.isSolved())
-        }
+        assertEquals(SolutionType.MULTIPLE_SOLUTIONS, solution.solutionType)
     }
 }

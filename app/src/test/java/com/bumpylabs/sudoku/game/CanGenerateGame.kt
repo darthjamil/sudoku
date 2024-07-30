@@ -6,14 +6,22 @@ import org.junit.Assert.*
 internal class CanGenerateGame {
     @Test
     fun can_generate_solved_game() {
-        val generator = GameGenerator(3)
+        val generator = GameGenerator()
         val board = generator.generate()
         val grid = board.copyAsArray()
 
-        print(grid.pretty())
+        println("Game:")
+        println(grid.pretty())
 
-        assertTrue(board.isSolved())
+        assertFalse(board.isSolved())
         assertEquals(9, board.size)
         grid.forEach { assertEquals(9, it.size) }
+
+        val solver = Solver(board)
+        val solution = solver.solve()
+        assertEquals(SolutionType.SINGLE_SOLUTION, solution.solutionType)
+
+        println("Solution:")
+        print(solution.solution.copyAsArray().pretty())
     }
 }
