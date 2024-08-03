@@ -216,7 +216,10 @@ internal class CanPlayGame {
     }
 
     private fun createGame(grid: Array<IntArray>): Game {
-        val (board, _) = Game.create(grid)
-        return board!!
+        val (board, _) = SudokuGrid.create(grid)
+        board!!
+
+        val (game, _) = Game.create(board)
+        return game!!
     }
 }

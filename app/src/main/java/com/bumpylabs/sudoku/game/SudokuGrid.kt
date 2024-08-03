@@ -4,8 +4,12 @@ import kotlin.math.sqrt
 
 /**
  * A data structure representing a Sudoku board.
+ *
+ * Create the data structure using the static builder method, which can return an error. The
+ * constructor is internal and can only be used by other actors in this module to bypass the
+ * validity checks.
  */
-class SudokuGrid(array: Array<IntArray>) {
+class SudokuGrid internal constructor(array: Array<IntArray>) {
     val size: Int = array.size
     val rank: Int = sqrt(size.toDouble()).toInt()
     val indices: IntRange
@@ -21,28 +25,19 @@ class SudokuGrid(array: Array<IntArray>) {
     fun copy() = SudokuGrid(copyAsArray())
     fun copyAsArray() = grid.map { it.clone() }.toTypedArray()
 
+    fun isBlank(row: Int, col: Int) = Companion.isBlank(grid[row][col])
     fun clearCell(row: Int, col: Int) {
         grid[row][col] = 0
     }
 
+    fun isComplete() = grid.all { row -> row.all { cell -> !isBlank(cell) } }
     fun isSolved() = isComplete() && gridSatisfiesOneRule()
 
-    fun isComplete(): Boolean {
-        return grid
-            .all { row ->
-                row.all { cell -> !isBlank(cell) }
-            }
-    }
-
-    fun isBlank(row: Int, col: Int) = Companion.isBlank(grid[row][col])
-
     fun valuesInRow(row: Int) = grid[row].map { it }.filterNot { isBlank(it) }
-    fun rowContainsValue(value: Int, row: Int) = grid[row].any { value == it }
     fun rowSatisfiesOneRule(row: Int) = containsDistincts(grid[row])
     private fun rowsSatisfyOneRule() = grid.indices.all { rowSatisfiesOneRule(it) }
 
     fun valuesInColumn(col: Int) = grid.indices.map { i -> grid[i][col] }.filterNot { isBlank(it) }
-    fun columnContainsValue(value: Int, col: Int) = grid.indices.any { i -> grid[i][col] == value }
     fun columnSatisfiesOneRule(col: Int): Boolean {
         val column = grid.map { row -> row[col] }
         return containsDistincts(column.toIntArray())
@@ -53,12 +48,6 @@ class SudokuGrid(array: Array<IntArray>) {
         val cells = cellsInBlock(blockRow, blockCol)
         val values = cells.map { (i, j) -> grid[i][j] }.filterNot { isBlank(it) }
         return values.toList()
-    }
-
-    fun blockContainsValue(value: Int, blockRow: Int, blockCol: Int): Boolean {
-        return cellsInBlock(blockRow, blockCol).any { (i, j) ->
-            grid[i][j] == value
-        }
     }
 
     fun blockSatisfiesOneRule(blockRow: Int, blockCol: Int): Boolean {
@@ -72,13 +61,6 @@ class SudokuGrid(array: Array<IntArray>) {
         return rowsSatisfyOneRule()
                 && columnsSatisfyOneRule()
                 && blocksSatisfyOneRule()
-    }
-
-    fun cellSatisfiesOneRule(row: Int, col: Int): Boolean {
-        val (blockRow, blockCol) = blockContaining(row, col)
-        return rowSatisfiesOneRule(row)
-                && columnSatisfiesOneRule(col)
-                && blockSatisfiesOneRule(blockRow, blockCol)
     }
 
     fun allowedValuesForCell(row: Int, col: Int): List<Int> {
@@ -95,6 +77,16 @@ class SudokuGrid(array: Array<IntArray>) {
         for (i in grid.indices) {
             for (j in grid.indices) {
                 if (isBlank(i, j)) {
+                    yield(i to j)
+                }
+            }
+        }
+    }
+
+    fun nonBlankCells() = sequence {
+        for (i in grid.indices) {
+            for (j in grid.indices) {
+                if (!isBlank(i, j)) {
                     yield(i to j)
                 }
             }
@@ -155,11 +147,46 @@ class SudokuGrid(array: Array<IntArray>) {
     }
 
     companion object {
-        fun containsDistincts(array: IntArray): Boolean {
+        /**
+         * Creates a new [SudokuGrid] with the provided underlying array.
+         *
+         * @param grid: A 2d array representing the initial board. In order to be
+         * valid, the board must be square, and have side length that is a perfect square.
+         * All other cells are expected to contain Zeros. [grid] is not modified.
+         *
+         * @return: A new Sudoku board and an error. The board will be null if there was an error.
+         */
+        fun create(grid: Array<IntArray>): Pair<SudokuGrid?, SudokuCreationError> {
+            if (isTooSmall(grid)) {
+                return null to SudokuCreationError.TOO_SMALL
+            }
+
+            if (!isSquare(grid)) {
+                return null to SudokuCreationError.IS_JAGGED_OR_RECTANGULAR
+            }
+
+            if (!isPerfectSquare(grid)) {
+                return null to SudokuCreationError.NOT_SQUARE
+            }
+
+            val board = SudokuGrid(grid)
+            return board to SudokuCreationError.NONE
+        }
+
+        private fun isTooSmall(grid: Array<IntArray>) = grid.size < 4
+
+        private fun isSquare(grid: Array<IntArray>) = grid.all { row -> row.size == grid.size }
+
+        private fun isPerfectSquare(grid: Array<IntArray>): Boolean {
+            val rank = sqrt(grid.size.toDouble())
+            return rank.toInt().compareTo(rank) == 0
+        }
+
+        private fun containsDistincts(array: IntArray): Boolean {
             val nonBlankEntries = array.filterNot { isBlank(it) }
             return nonBlankEntries.distinct().size == nonBlankEntries.size
         }
 
-        fun isBlank(value: Int) = value == 0
+        private fun isBlank(value: Int) = value == 0
     }
 }

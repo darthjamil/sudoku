@@ -77,21 +77,8 @@ internal class CanSolveGame {
     }
 
     @Test
-    fun return_random_solution_on_multiple_solutions_input() {
-        val grid = arrayOf(
-            intArrayOf(1, 2, 3,   0, 0, 0,   0, 0, 0),
-            intArrayOf(4, 5, 6,   0, 0, 0,   0, 0, 0),
-            intArrayOf(7, 8, 9,   0, 0, 0,   0, 0, 0),
-
-            intArrayOf(0, 0, 0,   9, 8, 7,   0, 0, 0),
-            intArrayOf(0, 0, 0,   6, 5, 4,   0, 0, 0),
-            intArrayOf(0, 0, 0,   3, 2, 1,   0, 0, 0),
-
-            intArrayOf(0, 0, 0,   0, 0, 0,   1, 4, 7),
-            intArrayOf(0, 0, 0,   0, 0, 0,   2, 5, 8),
-            intArrayOf(0, 0, 0,   0, 0, 0,   3, 6, 9),
-        )
-
+    fun return_multiple_solutions_on_empty_starting_grid() {
+        val grid = emptyArray(9)
         val board = SudokuGrid(grid)
         val solver = Solver(board)
         val solution = solver.solve()

@@ -16,6 +16,10 @@ internal class Solver(initialBoard: SudokuGrid) {
      * Solves the puzzle, if there is a single solution.
      */
     fun solve(): Solution {
+        if (!board.gridSatisfiesOneRule()) {
+            return Solution(solutionType = SolutionType.NO_SOLUTION, solution = board)
+        }
+
         do {
             val previousNumCellsSolved = numCellsSolved
             solveGrid()
@@ -42,9 +46,8 @@ internal class Solver(initialBoard: SudokuGrid) {
         }
     }
 
-    private fun hasSolutions(): Boolean {
-        return board.blankCells().any { (i, j) ->
+    private fun hasSolutions() =
+        board.blankCells().any { (i, j) ->
             board.allowedValuesForCell(i, j).isNotEmpty()
         }
-    }
 }

@@ -5,62 +5,6 @@ import org.junit.Assert.*
 
 internal class CanCreateGame {
     @Test
-    fun board_cannot_be_empty() {
-        assertError(emptyArray(), BoardSetupError.TOO_SMALL)
-    }
-
-    @Test
-    fun board_cannot_be_one_cell() {
-        val grid = arrayOf(
-            intArrayOf(0),
-        )
-        assertError(grid, BoardSetupError.TOO_SMALL)
-    }
-
-    @Test
-    fun board_cannot_be_two_cells() {
-        val grid = arrayOf(
-            intArrayOf(1, 0),
-            intArrayOf(0, 0),
-        )
-        assertError(grid, BoardSetupError.TOO_SMALL)
-    }
-
-    @Test
-    fun board_cannot_be_long_rectangle() {
-        val grid = arrayOf(
-            intArrayOf(1, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0),
-        )
-        assertError(grid, BoardSetupError.IS_JAGGED_OR_RECTANGULAR)
-    }
-
-    @Test
-    fun board_cannot_be_wide_rectangle() {
-        val grid = arrayOf(
-            intArrayOf(1, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-        )
-        assertError(grid, BoardSetupError.IS_JAGGED_OR_RECTANGULAR)
-    }
-
-    @Test
-    fun board_cannot_be_jagged() {
-        val grid = arrayOf(
-            intArrayOf(1, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-        )
-        assertError(grid, BoardSetupError.IS_JAGGED_OR_RECTANGULAR)
-    }
-
-    @Test
     fun board_must_have_givens() {
         val grid = arrayOf(
             intArrayOf(0, 0, 0, 0),
@@ -68,19 +12,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        assertError(grid, BoardSetupError.NO_GIVENS)
-    }
-
-    @Test
-    fun board_must_be_perfect_square() {
-        val grid = arrayOf(
-            intArrayOf(1, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0),
-        )
-        assertError(grid, BoardSetupError.NOT_SQUARE)
+        assertError(grid, GameCreationError.NO_GIVENS)
     }
 
     @Test
@@ -91,7 +23,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        assertError(grid, BoardSetupError.NOT_VALID)
+        assertError(grid, GameCreationError.INVALID_VALUES)
     }
 
     @Test
@@ -102,7 +34,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        assertError(grid, BoardSetupError.NOT_VALID)
+        assertError(grid, GameCreationError.INVALID_VALUES)
     }
 
     @Test
@@ -113,7 +45,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 0, 0),
             intArrayOf(0, 0, 0, 0),
         )
-        assertError(grid, BoardSetupError.NOT_VALID)
+        assertError(grid, GameCreationError.INVALID_STATE)
     }
 
     @Test
@@ -124,7 +56,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 3, 0),
             intArrayOf(0, 0, 4, 0),
         )
-        assertError(grid, BoardSetupError.NOT_VALID)
+        assertError(grid, GameCreationError.INVALID_STATE)
     }
 
     @Test
@@ -135,7 +67,7 @@ internal class CanCreateGame {
             intArrayOf(0, 0, 4, 3),
             intArrayOf(0, 0, 3, 1),
         )
-        assertError(grid, BoardSetupError.NOT_VALID)
+        assertError(grid, GameCreationError.INVALID_STATE)
     }
 
     @Test
@@ -146,7 +78,7 @@ internal class CanCreateGame {
             intArrayOf(3, 1, 4, 2),
             intArrayOf(2, 4, 3, 1),
         )
-        assertError(grid, BoardSetupError.ALREADY_SOLVED)
+        assertError(grid, GameCreationError.ALREADY_SOLVED)
     }
 
     @Test
@@ -157,17 +89,26 @@ internal class CanCreateGame {
             intArrayOf(3, 0, 0, 0),
             intArrayOf(0, 4, 0, 0),
         )
-        val (board, error) = Game.create(grid)
-
-        assertEquals(BoardSetupError.NONE, error)
+        val (board, error) = SudokuGrid.create(grid)
+        assertEquals(SudokuCreationError.NONE, error)
         assertNotNull(board)
-        assertEquals(2, board?.rank)
+        board!!
+
+        val (game, gameError) = Game.create(board!!)
+        assertEquals(GameCreationError.NONE, gameError)
+        assertNotNull(game)
+
+        assertEquals(2, board.rank)
     }
 
-    private fun assertError(grid: Array<IntArray>, expectedError: BoardSetupError) {
-        val (board, error) = Game.create(grid)
+    private fun assertError(grid: Array<IntArray>, expectedError: GameCreationError) {
+        val (board, error) = SudokuGrid.create(grid)
+        assertEquals(SudokuCreationError.NONE, error)
+        assertNotNull(board)
+        board!!
 
-        assertEquals(expectedError, error)
-        assertNull(board)
+        val (game, gameError) = Game.create(board)
+        assertEquals(expectedError, gameError)
+        assertNull(game)
     }
 }

@@ -3,6 +3,7 @@ package com.bumpylabs.sudoku
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import com.bumpylabs.sudoku.game.Game
+import com.bumpylabs.sudoku.game.GameGenerator
 import com.bumpylabs.sudoku.game.PlayResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,20 +63,8 @@ class GameViewModel : ViewModel() {
         oldRow == newRow && oldCol == newCol
 
     private fun getGameBoard(rank: Int): Game {
-        val grid = arrayOf(
-            intArrayOf(6, 7, 0,   0, 3, 0,   1, 9, 4),
-            intArrayOf(0, 0, 9,   0, 0, 0,   7, 0, 8),
-            intArrayOf(0, 8, 0,   9, 0, 4,   0, 3, 0),
-
-            intArrayOf(0, 1, 0,   5, 0, 0,   0, 4, 9),
-            intArrayOf(0, 0, 3,   0, 0, 0,   2, 0, 0),
-            intArrayOf(5, 2, 0,   0, 0, 9,   0, 1, 0),
-
-            intArrayOf(0, 6, 0,   3, 0, 1,   0, 7, 0),
-            intArrayOf(4, 0, 1,   0, 0, 0,   9, 0, 0),
-            intArrayOf(9, 5, 7,   0, 6, 0,   0, 8, 1),
-        )
-        val (game, _) = Game.create(grid)
+        val board = GameGenerator().generate()
+        val (game, _) = Game.create(board)
         return game!!
     }
 

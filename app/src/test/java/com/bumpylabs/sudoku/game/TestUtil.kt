@@ -1,5 +1,7 @@
 package com.bumpylabs.sudoku.game
 
+internal fun emptyArray(size: Int) = Array(size) { IntArray(size) { 0 } }
+
 internal fun Array<IntArray>.pretty(): String {
     var str = ""
 

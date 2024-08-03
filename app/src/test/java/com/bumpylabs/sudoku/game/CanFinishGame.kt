@@ -143,11 +143,16 @@ internal class CanFinishGame {
     }
 
     private fun createGame(grid: Array<IntArray>): Game {
-        val (board, error) = Game.create(grid)
-        assertEquals(BoardSetupError.NONE, error)
+        val (board, error) = SudokuGrid.create(grid)
+        assertEquals(SudokuCreationError.NONE, error)
         assertNotNull(board)
+        board!!
 
-        return board!!
+        val (game, gameError) = Game.create(board)
+        assertEquals(GameCreationError.NONE, gameError)
+        assertNotNull(game)
+
+        return game!!
     }
 
     private fun assertPlaySuccess(board: Game, i: Int, j: Int, value: Int) {
