@@ -94,7 +94,7 @@ internal class CanCreateGame {
         assertNotNull(board)
         board!!
 
-        val (game, gameError) = Game.create(board!!)
+        val (game, gameError) = Game.create(board)
         assertEquals(GameCreationError.NONE, gameError)
         assertNotNull(game)
 
