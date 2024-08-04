@@ -1,5 +1,6 @@
 package com.bumpylabs.sudoku
 
+import android.os.Parcelable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
 import com.bumpylabs.sudoku.game.Game
@@ -8,22 +9,23 @@ import com.bumpylabs.sudoku.game.PlayResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.parcelize.Parcelize
 
-class GameViewModel : ViewModel() {
-    private lateinit var gameBoard: Game
+class GameViewModel(
+    private val rank: Int
+) : ViewModel() {
+    private val gameBoard: Game
     private val _uiState = MutableStateFlow(GameState())
     val uiState = _uiState.asStateFlow()
 
-    fun createGame(rank: Int = 3) {
-        _uiState.update {
-            gameBoard = getGameBoard(rank)
-            val valueOptions = 1..(gameBoard.rank * gameBoard.rank)
+    init {
+        gameBoard = getGameBoard(rank)
 
+        _uiState.update {
+            val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
             GameState(rank = rank, grid = gameBoard.getGrid(), valueOptions = valueOptions)
         }
     }
-
-    fun valueAt(row: Int, column: Int) = gameBoard.valueAt(row, column)
 
     fun isGiven(row: Int, column: Int) = gameBoard.isGiven(row, column)
 
@@ -84,11 +86,12 @@ class GameViewModel : ViewModel() {
 }
 
 @Stable
+@Parcelize
 data class GameState(
     val rank: Int = 0,
     val grid: Array<IntArray> = emptyArray(),
     val enableValueSelection: Boolean = false,
-    val valueOptions: IntRange = IntRange.EMPTY,
+    val valueOptions: Array<Int> = emptyArray(),
     val selectedCellRow: Int = -1,
     val selectedCellCol: Int = -1,
-)
+) : Parcelable

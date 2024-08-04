@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -30,6 +29,9 @@ import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumpylabs.sudoku.ui.theme.SudokuTheme
 
 class MainActivity : ComponentActivity() {
@@ -45,8 +47,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             SudokuTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val viewModel: GameViewModel by viewModels()
-                    viewModel.createGame(3)
+                    val viewModel = viewModel<GameViewModel>(factory = object: ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return GameViewModel(3) as T
+                        }
+                    })
 
                     Game(viewModel, modifier = Modifier.padding(innerPadding))
                 }
@@ -156,7 +161,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun NumberSelection(
         enabled: Boolean,
-        valueOptions: IntRange,
+        valueOptions: Array<Int>,
         onNumberClick: (value: Int) -> Unit,
         modifier: Modifier = Modifier
     ) {
