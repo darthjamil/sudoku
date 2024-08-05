@@ -49,6 +49,10 @@ class GameViewModel(
         val i = _uiState.value.selectedCellRow
         val j = _uiState.value.selectedCellCol
 
+        if (i == null || j == null) {
+            return
+        }
+
         val playResult = gameBoard.play(i, j, value)
 
         if (playResult == PlayResult.VALID) {
@@ -61,7 +65,7 @@ class GameViewModel(
         }
     }
 
-    private fun selectedSameCell(oldRow: Int, oldCol: Int, newRow: Int, newCol: Int) =
+    private fun selectedSameCell(oldRow: Int?, oldCol: Int?, newRow: Int, newCol: Int) =
         oldRow == newRow && oldCol == newCol
 
     private fun getGameBoard(rank: Int): Game {
@@ -70,18 +74,18 @@ class GameViewModel(
         return game!!
     }
 
-    fun GameState.isDeselected() = this.selectedCellRow == -1 && this.selectedCellCol == -1
+    private fun GameState.isDeselected() = this.selectedCellRow == null && this.selectedCellCol == null
 
-    fun GameState.withCellSelected(row: Int, column: Int) = this.copy(
+    private fun GameState.withCellSelected(row: Int, column: Int) = this.copy(
             enableValueSelection = true,
             selectedCellRow = row,
             selectedCellCol = column
     )
 
-    fun GameState.withCellDeselected() = this.copy(
+    private fun GameState.withCellDeselected() = this.copy(
             enableValueSelection = false,
-            selectedCellRow = -1,
-            selectedCellCol = -1
+            selectedCellRow = null,
+            selectedCellCol = null
     )
 }
 
@@ -92,6 +96,6 @@ data class GameState(
     val grid: Array<IntArray> = emptyArray(),
     val enableValueSelection: Boolean = false,
     val valueOptions: Array<Int> = emptyArray(),
-    val selectedCellRow: Int = -1,
-    val selectedCellCol: Int = -1,
+    val selectedCellRow: Int? = null,
+    val selectedCellCol: Int? = null,
 ) : Parcelable

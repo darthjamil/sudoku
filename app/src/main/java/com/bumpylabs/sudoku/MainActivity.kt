@@ -3,20 +3,23 @@ package com.bumpylabs.sudoku
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -33,6 +36,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumpylabs.sudoku.ui.theme.SudokuTheme
+import kotlin.math.sqrt
 
 class MainActivity : ComponentActivity() {
 
@@ -42,18 +46,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
 
         setContent {
             SudokuTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Surface(
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
                     val viewModel = viewModel<GameViewModel>(factory = object: ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
                             return GameViewModel(3) as T
                         }
                     })
 
-                    Game(viewModel, modifier = Modifier.padding(innerPadding))
+                    Scaffold(
+                        modifier = Modifier.fillMaxSize()
+                    ) { innerPadding ->
+                        Game(viewModel, modifier = Modifier.padding(innerPadding))
+                    }
                 }
             }
         }
@@ -67,16 +77,20 @@ class MainActivity : ComponentActivity() {
         val uiState by viewModel.uiState.collectAsState()
 
         Column(
-            modifier = modifier
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Board(
                 rank = uiState.rank,
                 grid = uiState.grid,
+                selectedRow = uiState.selectedCellRow,
+                selectedColumn = uiState.selectedCellRow,
                 checkIsGiven = { row, column -> viewModel.isGiven(row, column) },
                 onCellClick = { row, column -> viewModel.clickCell(row, column) },
                 modifier = Modifier
                     .size(boardSize)
             )
+            Spacer(modifier = Modifier.padding(16.dp))
             NumberSelection(
                 enabled = uiState.enableValueSelection,
                 valueOptions = uiState.valueOptions,
@@ -89,6 +103,8 @@ class MainActivity : ComponentActivity() {
     fun Board(
         rank: Int,
         grid: Array<IntArray>,
+        selectedRow: Int?,
+        selectedColumn: Int?,
         checkIsGiven: (row: Int, column: Int) -> Boolean,
         onCellClick: (row: Int, column: Int) -> Unit,
         modifier: Modifier = Modifier
@@ -98,11 +114,11 @@ class MainActivity : ComponentActivity() {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier
+            modifier = modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
         ) {
             repeat(gameSize) { row ->
                 HorizontalDivider(
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                     thickness = if (isDivisible(row, rank)) thickDivider else thinDivider
                 )
 
@@ -113,25 +129,34 @@ class MainActivity : ComponentActivity() {
                         .weight(1f)
                 ) {
                     repeat(gameSize) { column ->
+                        val isCellSelected = row == selectedRow && column == selectedColumn
+                        val isCellHighlighted = !isCellSelected && (row == selectedRow || column == selectedColumn)
+                        val isValueHighlighted = selectedRow != null
+                                && selectedColumn != null
+                                && grid[selectedRow][selectedColumn] == grid[row][column]
+
                         VerticalDivider(
-                            color = Color.Black,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                             thickness = if (isDivisible(column, rank)) thickDivider else thinDivider
                         )
 
                         Cell(
                             value = grid[row][column],
                             isGiven = checkIsGiven(row, column),
+                            isSelected = isCellSelected,
+                            isCellHighlighted = isCellHighlighted,
+                            isValueHighlighted = isValueHighlighted,
                             onCellClick = { onCellClick(row, column) },
                             modifier = Modifier
                                 .weight(1f)
                         )
                     }
 
-                    VerticalDivider(color = Color.Black, thickness = thickDivider)
+                    VerticalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer, thickness = thickDivider)
                 }
             }
 
-            HorizontalDivider(color = Color.Black, thickness = thickDivider)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer, thickness = thickDivider)
         }
     }
 
@@ -139,16 +164,33 @@ class MainActivity : ComponentActivity() {
     fun Cell(
         value: Int,
         isGiven: Boolean,
+        isSelected: Boolean,
+        isCellHighlighted: Boolean,
+        isValueHighlighted: Boolean,
         onCellClick: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         val text = if (value == 0) "" else value.toString()
+        val backgroundColor = when {
+            isSelected -> MaterialTheme.colorScheme.primaryContainer
+            isCellHighlighted -> MaterialTheme.colorScheme.secondaryContainer
+            else -> MaterialTheme.colorScheme.secondaryContainer
+        }
+        val textColor = when {
+            isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
+            isValueHighlighted -> MaterialTheme.colorScheme.onPrimaryContainer
+            isCellHighlighted -> MaterialTheme.colorScheme.onSecondaryContainer
+            else -> MaterialTheme.colorScheme.onSecondaryContainer
+        }
 
         Text(
             text = text,
             textAlign = TextAlign.Center,
-            style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
+            style = TextStyle(
+                color = textColor,
+                platformStyle = PlatformTextStyle(includeFontPadding = false)),
             modifier = modifier
+                .background(color = backgroundColor)
                 .wrapContentHeight(Alignment.CenterVertically)
                 .clickable(
                     enabled = !isGiven,
@@ -165,8 +207,11 @@ class MainActivity : ComponentActivity() {
         onNumberClick: (value: Int) -> Unit,
         modifier: Modifier = Modifier
     ) {
+        val maxValuesPerRow = sqrt(valueOptions.size.toDouble()).toInt()
+
         FlowRow(
-            modifier = modifier
+            modifier = modifier,
+            maxItemsInEachRow = maxValuesPerRow,
         ) {
             valueOptions.forEach {
                 ElevatedButton(
