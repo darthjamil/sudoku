@@ -11,24 +11,27 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -40,7 +43,6 @@ import kotlin.math.sqrt
 
 class MainActivity : ComponentActivity() {
 
-    private val boardSize = 400.dp
     private val thickDivider = 1.dp
     private val thinDivider = 0.25.dp
 
@@ -49,22 +51,49 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             SudokuTheme {
-                Surface(
-                    color = MaterialTheme.colorScheme.background,
-                    modifier = Modifier.fillMaxSize(),
-                ) {
-                    val viewModel = viewModel<GameViewModel>(factory = object: ViewModelProvider.Factory {
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return GameViewModel(3) as T
-                        }
-                    })
-
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize()
-                    ) { innerPadding ->
-                        Game(viewModel, modifier = Modifier.padding(innerPadding))
+                val viewModel = viewModel<GameViewModel>(factory = object: ViewModelProvider.Factory {
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return GameViewModel(3) as T
                     }
-                }
+                })
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = { TopBar() },
+                    content = { innerPadding -> Game(viewModel, modifier = Modifier.padding(innerPadding)) },
+                    floatingActionButton = { FAB() }
+                )
+            }
+        }
+    }
+
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun TopBar(
+        modifier: Modifier = Modifier
+    ) {
+        TopAppBar(
+            title = { "Sudoku" },
+            modifier = modifier,
+        )
+    }
+
+    @Composable
+    fun FAB(
+        modifier: Modifier = Modifier
+    ) {
+        FloatingActionButton(
+            onClick = { /*TODO*/ },
+            modifier = modifier,
+        )
+        {
+            Row {
+                Icon(
+                    painter = painterResource(R.drawable.outline_refresh_24),
+                    contentDescription = "New Game",
+                )
+                Spacer(modifier = Modifier.padding(6.dp))
+                Text(text = "New Game")
             }
         }
     }
@@ -84,11 +113,11 @@ class MainActivity : ComponentActivity() {
                 rank = uiState.rank,
                 grid = uiState.grid,
                 selectedRow = uiState.selectedCellRow,
-                selectedColumn = uiState.selectedCellRow,
+                selectedColumn = uiState.selectedCellCol,
                 checkIsGiven = { row, column -> viewModel.isGiven(row, column) },
                 onCellClick = { row, column -> viewModel.clickCell(row, column) },
                 modifier = Modifier
-                    .size(boardSize)
+                    .size(400.dp)
             )
             Spacer(modifier = Modifier.padding(16.dp))
             NumberSelection(
@@ -114,7 +143,7 @@ class MainActivity : ComponentActivity() {
         Column(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
+            modifier = modifier
         ) {
             repeat(gameSize) { row ->
                 HorizontalDivider(
@@ -131,7 +160,8 @@ class MainActivity : ComponentActivity() {
                     repeat(gameSize) { column ->
                         val isCellSelected = row == selectedRow && column == selectedColumn
                         val isCellHighlighted = !isCellSelected && (row == selectedRow || column == selectedColumn)
-                        val isValueHighlighted = selectedRow != null
+                        val isValueHighlighted = grid[row][column] != 0
+                                && selectedRow != null
                                 && selectedColumn != null
                                 && grid[selectedRow][selectedColumn] == grid[row][column]
 
@@ -174,28 +204,25 @@ class MainActivity : ComponentActivity() {
         val backgroundColor = when {
             isSelected -> MaterialTheme.colorScheme.primaryContainer
             isCellHighlighted -> MaterialTheme.colorScheme.secondaryContainer
-            else -> MaterialTheme.colorScheme.secondaryContainer
+            isValueHighlighted -> MaterialTheme.colorScheme.tertiaryContainer
+            else -> MaterialTheme.colorScheme.surface
         }
         val textColor = when {
             isSelected -> MaterialTheme.colorScheme.onPrimaryContainer
-            isValueHighlighted -> MaterialTheme.colorScheme.onPrimaryContainer
             isCellHighlighted -> MaterialTheme.colorScheme.onSecondaryContainer
+            isValueHighlighted -> MaterialTheme.colorScheme.onTertiaryContainer
             else -> MaterialTheme.colorScheme.onSecondaryContainer
         }
 
         Text(
             text = text,
             textAlign = TextAlign.Center,
-            style = TextStyle(
-                color = textColor,
-                platformStyle = PlatformTextStyle(includeFontPadding = false)),
+            style = TextStyle(color = textColor),
             modifier = modifier
+                .fillMaxHeight()
                 .background(color = backgroundColor)
-                .wrapContentHeight(Alignment.CenterVertically)
-                .clickable(
-                    enabled = !isGiven,
-                    onClick = onCellClick,
-                )
+                .wrapContentSize()
+                .clickable(onClick = onCellClick)
         )
     }
 

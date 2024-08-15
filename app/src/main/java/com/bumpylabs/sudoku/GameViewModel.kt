@@ -31,16 +31,12 @@ class GameViewModel(
 
     fun clickCell(row: Int, column: Int) {
         _uiState.update { currentState ->
-            if (gameBoard.isGiven(row, column)) {
-                return@update currentState.withCellDeselected()
-            }
-
-            if (currentState.isDeselected()) {
-                currentState.withCellSelected(row, column)
-            } else if (selectedSameCell(currentState.selectedCellRow, currentState.selectedCellCol, row, column)) {
+            if (selectedSameCell(currentState.selectedCellRow, currentState.selectedCellCol, row, column)) {
                 currentState.withCellDeselected()
+            } else if (gameBoard.isGiven(row, column)) {
+                currentState.withCellSelected(row, column, allowChange = false)
             } else { // selected a different cell
-                currentState.withCellSelected(row, column)
+                currentState.withCellSelected(row, column, allowChange = true)
             }
         }
     }
@@ -76,8 +72,8 @@ class GameViewModel(
 
     private fun GameState.isDeselected() = this.selectedCellRow == null && this.selectedCellCol == null
 
-    private fun GameState.withCellSelected(row: Int, column: Int) = this.copy(
-            enableValueSelection = true,
+    private fun GameState.withCellSelected(row: Int, column: Int, allowChange: Boolean = true) = this.copy(
+            enableValueSelection = allowChange,
             selectedCellRow = row,
             selectedCellCol = column
     )
