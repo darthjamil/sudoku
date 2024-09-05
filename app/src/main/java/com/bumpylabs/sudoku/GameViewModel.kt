@@ -3,13 +3,14 @@ package com.bumpylabs.sudoku
 import android.os.Parcelable
 import androidx.compose.runtime.Stable
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bumpylabs.sudoku.game.Game
 import com.bumpylabs.sudoku.game.GameGenerator
 import com.bumpylabs.sudoku.game.PlayResult
-import com.bumpylabs.sudoku.game.SudokuGrid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 class GameViewModel(
@@ -27,28 +28,34 @@ class GameViewModel(
     fun isGiven(row: Int, column: Int) = gameBoard.isGiven(row, column)
 
     fun clickCell(row: Int, column: Int) {
-        _uiState.update { currentState ->
-            if (selectedSameCell(currentState.selectedCellRow, currentState.selectedCellCol, row, column)) {
-                currentState.withCellDeselected()
-            } else if (gameBoard.isGiven(row, column)) {
-                currentState.withCellSelected(row, column, allowChange = false)
-            } else { // selected a different cell
-                currentState.withCellSelected(row, column, allowChange = true)
+        viewModelScope.launch {
+            _uiState.update { currentState ->
+                if (selectedSameCell(currentState.selectedCellRow, currentState.selectedCellCol, row, column)) {
+                    currentState.withCellDeselected()
+                } else if (gameBoard.isGiven(row, column)) {
+                    currentState.withCellSelected(row, column, allowChange = false)
+                } else { // selected a different cell
+                    currentState.withCellSelected(row, column, allowChange = true)
+                }
             }
         }
     }
 
     fun clickValue(value: Int) {
-        val i = _uiState.value.selectedCellRow
-        val j = _uiState.value.selectedCellCol
+        viewModelScope.launch {
+            val i = _uiState.value.selectedCellRow
+            val j = _uiState.value.selectedCellCol
 
-        if (i == null || j == null) {
-            return
-        }
+            if (i == null || j == null) {
+                return@launch
+            }
 
-        val playResult = gameBoard.play(i, j, value)
+            val playResult = gameBoard.play(i, j, value)
 
-        if (playResult == PlayResult.VALID) {
+            if (playResult != PlayResult.VALID) {
+                return@launch
+            }
+
             _uiState.update { currentState ->
                 val newState = currentState.withCellDeselected()
                 newState.grid[i][j] = value
@@ -59,15 +66,17 @@ class GameViewModel(
     }
 
     fun newGame() {
-        gameBoard = getGameBoard(rank)
+        viewModelScope.launch {
+            gameBoard = getGameBoard(rank)
 
-        _uiState.update {
-            val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
-            GameState(
-                rank = rank,
-                grid = gameBoard.getGrid(),
-                valueOptions = valueOptions
-            )
+            _uiState.update {
+                val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
+                GameState(
+                    rank = rank,
+                    grid = gameBoard.getGrid(),
+                    valueOptions = valueOptions
+                )
+            }
         }
     }
 
@@ -79,8 +88,6 @@ class GameViewModel(
         val (game, _) = Game.create(board)
         return game!!
     }
-
-    private fun GameState.isDeselected() = this.selectedCellRow == null && this.selectedCellCol == null
 
     private fun GameState.withCellSelected(row: Int, column: Int, allowChange: Boolean = true) = this.copy(
             enableValueSelection = allowChange,
