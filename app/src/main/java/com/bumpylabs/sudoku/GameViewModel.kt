@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.bumpylabs.sudoku.game.Game
 import com.bumpylabs.sudoku.game.GameGenerator
 import com.bumpylabs.sudoku.game.PlayResult
+import com.bumpylabs.sudoku.game.SudokuGrid
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -14,17 +15,13 @@ import kotlinx.parcelize.Parcelize
 class GameViewModel(
     private val rank: Int
 ) : ViewModel() {
-    private val gameBoard: Game
+    private lateinit var gameBoard: Game
+
     private val _uiState = MutableStateFlow(GameState())
     val uiState = _uiState.asStateFlow()
 
     init {
-        gameBoard = getGameBoard(rank)
-
-        _uiState.update {
-            val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
-            GameState(rank = rank, grid = gameBoard.getGrid(), valueOptions = valueOptions)
-        }
+        newGame()
     }
 
     fun isGiven(row: Int, column: Int) = gameBoard.isGiven(row, column)
@@ -58,6 +55,19 @@ class GameViewModel(
 
                 newState
             }
+        }
+    }
+
+    fun newGame() {
+        gameBoard = getGameBoard(rank)
+
+        _uiState.update {
+            val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
+            GameState(
+                rank = rank,
+                grid = gameBoard.getGrid(),
+                valueOptions = valueOptions
+            )
         }
     }
 

@@ -57,11 +57,25 @@ class MainActivity : ComponentActivity() {
                     }
                 })
 
+                val uiState by viewModel.uiState.collectAsState()
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = { TopBar() },
-                    content = { innerPadding -> Game(viewModel, modifier = Modifier.padding(innerPadding)) },
-                    floatingActionButton = { FAB() }
+                    content = { innerPadding ->
+                        Game(
+                            uiState,
+                            checkIsGiven = { row, col -> viewModel.isGiven(row, col) },
+                            onCellClick = { row, col -> viewModel.clickCell(row, col) },
+                            onValueClick = { viewModel.clickValue(it) },
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    },
+                    floatingActionButton = {
+                        FAB(
+                            onNewGameClick = { viewModel.newGame() }
+                        )
+                    }
                 )
             }
         }
@@ -80,10 +94,11 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun FAB(
+        onNewGameClick: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         FloatingActionButton(
-            onClick = { /*TODO*/ },
+            onClick = onNewGameClick,
             modifier = modifier,
         )
         {
@@ -100,11 +115,12 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun Game(
-        viewModel: GameViewModel,
+        uiState: GameState,
+        checkIsGiven: (row: Int, column: Int) -> Boolean,
+        onCellClick: (row: Int, column: Int) -> Unit,
+        onValueClick: (value: Int) -> Unit,
         modifier: Modifier = Modifier
     ) {
-        val uiState by viewModel.uiState.collectAsState()
-
         Column(
             modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -114,8 +130,8 @@ class MainActivity : ComponentActivity() {
                 grid = uiState.grid,
                 selectedRow = uiState.selectedCellRow,
                 selectedColumn = uiState.selectedCellCol,
-                checkIsGiven = { row, column -> viewModel.isGiven(row, column) },
-                onCellClick = { row, column -> viewModel.clickCell(row, column) },
+                checkIsGiven = checkIsGiven,
+                onCellClick = onCellClick,
                 modifier = Modifier
                     .size(400.dp)
             )
@@ -123,7 +139,7 @@ class MainActivity : ComponentActivity() {
             NumberSelection(
                 enabled = uiState.enableValueSelection,
                 valueOptions = uiState.valueOptions,
-                onNumberClick = { viewModel.clickValue(it) }
+                onNumberClick = onValueClick
             )
         }
     }
