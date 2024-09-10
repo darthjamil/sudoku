@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bumpylabs.sudoku.game.Game
 import com.bumpylabs.sudoku.game.GameGenerator
+import com.bumpylabs.sudoku.game.RandomGameGenerator
 import com.bumpylabs.sudoku.game.PlayResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +15,8 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 class GameViewModel(
-    private val rank: Int
+    private val rank: Int,
+    private val gameGenerator: GameGenerator = RandomGameGenerator()
 ) : ViewModel() {
     private lateinit var gameBoard: Game
 
@@ -67,7 +69,7 @@ class GameViewModel(
 
     fun newGame() {
         viewModelScope.launch {
-            gameBoard = getGameBoard(rank)
+            gameBoard = getGameBoard()
 
             _uiState.update {
                 val valueOptions = (1..(gameBoard.rank * gameBoard.rank)).toList().toTypedArray()
@@ -83,8 +85,8 @@ class GameViewModel(
     private fun selectedSameCell(oldRow: Int?, oldCol: Int?, newRow: Int, newCol: Int) =
         oldRow == newRow && oldCol == newCol
 
-    private fun getGameBoard(rank: Int): Game {
-        val board = GameGenerator().generate()
+    private fun getGameBoard(): Game {
+        val board = gameGenerator.generate()
         val (game, _) = Game.create(board)
         return game!!
     }

@@ -6,7 +6,7 @@ import org.junit.Assert.*
 internal class CanGenerateGame {
     @Test
     fun can_generate_solved_game() {
-        val generator = GameGenerator()
+        val generator = RandomGameGenerator()
         val board = generator.generate()
         val grid = board.copyAsArray()
 

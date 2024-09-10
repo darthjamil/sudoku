@@ -1,15 +1,17 @@
 package com.bumpylabs.sudoku
 
+import android.os.Build
 import android.os.Bundle
+import android.view.HapticFeedbackConstants
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,11 +38,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.view.ViewCompat.performHapticFeedback
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bumpylabs.sudoku.ui.theme.SudokuTheme
 import kotlin.math.sqrt
+
 
 class MainActivity : ComponentActivity() {
 
@@ -54,7 +59,7 @@ class MainActivity : ComponentActivity() {
             SudokuTheme {
                 val viewModel = viewModel<GameViewModel>(factory = object: ViewModelProvider.Factory {
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return GameViewModel(3) as T
+                        return GameViewModel(rank = 3) as T
                     }
                 })
 
@@ -235,6 +240,7 @@ class MainActivity : ComponentActivity() {
             text = text,
             textAlign = TextAlign.Center,
             style = TextStyle(color = textColor),
+            fontSize = 30.sp,
             modifier = modifier
                 .fillMaxHeight()
                 .background(color = backgroundColor)
